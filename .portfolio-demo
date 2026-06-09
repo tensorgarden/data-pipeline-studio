@@ -1,0 +1,2 @@
+This file identifies this repo as a Tensor Garden portfolio demonstration.
+It is used by the portfolio activity cron to discover eligible repos.
