@@ -70,6 +70,13 @@ export interface Pipeline {
   updatedAt: string;
 }
 
+export interface QualityBreakdown {
+  pass: number;
+  warn: number;
+  fail: number;
+  pending: number;
+}
+
 export interface DataMetrics {
   totalPipelines: number;
   activePipelines: number;
@@ -79,4 +86,6 @@ export interface DataMetrics {
   failedRunsToday: number;
   avgLatencyMs: number;
   uptimePercent: number;
+  qualityChecksByStatus: QualityBreakdown;
+  errorRatePercent: number;
 }

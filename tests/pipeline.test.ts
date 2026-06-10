@@ -97,4 +97,27 @@ describe("demo-data: computeMetrics", () => {
     expect(m.uptimePercent).toBeGreaterThanOrEqual(0);
     expect(m.uptimePercent).toBeLessThanOrEqual(100);
   });
+
+  it("should compute quality checks breakdown by status", () => {
+    const m = computeMetrics();
+    const { pass, warn, fail, pending } = m.qualityChecksByStatus;
+    // 12 total checks: 8 pass, 3 warn, 1 fail, 0 pending
+    expect(pass).toBe(8);
+    expect(warn).toBe(3);
+    expect(fail).toBe(1);
+    expect(pending).toBe(0);
+    expect(pass + warn + fail + pending).toBe(12);
+  });
+
+  it("should compute errorRatePercent between 0 and 100", () => {
+    const m = computeMetrics();
+    expect(m.errorRatePercent).toBeGreaterThanOrEqual(0);
+    expect(m.errorRatePercent).toBeLessThanOrEqual(100);
+  });
+
+  it("should compute non-zero errorRatePercent when failures exist", () => {
+    const m = computeMetrics();
+    // There are failed runs with errors, so error rate should be > 0
+    expect(m.errorRatePercent).toBeGreaterThan(0);
+  });
 });

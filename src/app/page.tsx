@@ -185,11 +185,18 @@ function RunTimeline() {
 }
 
 // ── Quality Dashboard ──────────────────────────────────────────────────────
-function QualityDashboard() {
+function QualityDashboard({
+  pass,
+  warn,
+  fail,
+  errorRatePercent,
+}: {
+  pass: number;
+  warn: number;
+  fail: number;
+  errorRatePercent: number;
+}) {
   const allChecks = pipelines.flatMap((p) => p.qualityChecks);
-  const pass = allChecks.filter((q) => q.status === "pass").length;
-  const warn = allChecks.filter((q) => q.status === "warn").length;
-  const fail = allChecks.filter((q) => q.status === "fail").length;
   const avgScore =
     allChecks.length > 0
       ? Math.round(
@@ -224,6 +231,21 @@ function QualityDashboard() {
           showValue
           variant={avgScore >= 90 ? "success" : avgScore >= 75 ? "warning" : "danger"}
         />
+      </div>
+      <div className="mb-4 rounded-lg bg-slate-50 p-3 text-center">
+        <p className="text-xs text-slate-500">Today&apos;s Error Rate</p>
+        <p
+          className={clsx(
+            "text-lg font-bold",
+            errorRatePercent < 1
+              ? "text-emerald-600"
+              : errorRatePercent < 5
+                ? "text-amber-600"
+                : "text-red-600"
+          )}
+        >
+          {errorRatePercent}%
+        </p>
       </div>
       <div className="space-y-2">
         {allChecks.map((check) => (
@@ -525,7 +547,12 @@ export default function Page() {
       {/* Two-column: Run Timeline + Quality Dashboard */}
       <div className="mb-8 grid gap-6 lg:grid-cols-2">
         <RunTimeline />
-        <QualityDashboard />
+        <QualityDashboard
+          pass={metrics.qualityChecksByStatus.pass}
+          warn={metrics.qualityChecksByStatus.warn}
+          fail={metrics.qualityChecksByStatus.fail}
+          errorRatePercent={metrics.errorRatePercent}
+        />
       </div>
 
       {/* ETL Scheduler */}

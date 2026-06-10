@@ -5,6 +5,7 @@ import {
   DataSource,
   ETLJob,
   DataMetrics,
+  QualityBreakdown,
 } from "./types";
 
 export const dataQualityChecks: DataQualityCheck[] = [
@@ -627,6 +628,22 @@ export function computeMetrics(): DataMetrics {
   const totalRunsToday = runsToday.length;
   const failedRunsToday = runsToday.filter((r) => r.status === "failed").length;
 
+  // Error rate: total errors across today's runs as % of total records ingested
+  const todayRecords = runsToday.reduce((s, r) => s + r.recordsIngested, 0);
+  const todayErrors = runsToday.reduce((s, r) => s + r.errors, 0);
+  const errorRatePercent =
+    todayRecords > 0
+      ? Math.round((todayErrors / todayRecords) * 10000) / 100
+      : 0;
+
+  const allChecks = pipelines.flatMap((p) => p.qualityChecks);
+  const qualityChecksByStatus: QualityBreakdown = {
+    pass: allChecks.filter((q) => q.status === "pass").length,
+    warn: allChecks.filter((q) => q.status === "warn").length,
+    fail: allChecks.filter((q) => q.status === "fail").length,
+    pending: allChecks.filter((q) => q.status === "pending").length,
+  };
+
   const qualityScores = pipelines.flatMap((p) =>
     p.qualityChecks.map((qc) => qc.score)
   );
@@ -665,5 +682,7 @@ export function computeMetrics(): DataMetrics {
     failedRunsToday,
     avgLatencyMs: avgLatency,
     uptimePercent: avgUptime,
+    qualityChecksByStatus,
+    errorRatePercent,
   };
 }
