@@ -121,3 +121,61 @@ describe("demo-data: computeMetrics", () => {
     expect(m.errorRatePercent).toBeGreaterThan(0);
   });
 });
+
+describe("demo-data: pipeline lineage", () => {
+  const knownIds = new Set(pipelines.map((p) => p.id));
+
+  it("should only reference valid pipeline IDs as upstream dependencies", () => {
+    for (const p of pipelines) {
+      for (const upstreamId of p.upstreamPipelineIds) {
+        expect(knownIds.has(upstreamId)).toBe(true);
+      }
+    }
+  });
+
+  it("should not have any pipeline depending on itself", () => {
+    for (const p of pipelines) {
+      expect(p.upstreamPipelineIds).not.toContain(p.id);
+    }
+  });
+
+  it("should have no circular dependencies", () => {
+    // Build adjacency list and check for cycles via DFS
+    const adj = new Map<string, string[]>();
+    for (const p of pipelines) {
+      adj.set(p.id, p.upstreamPipelineIds);
+    }
+    const visited = new Set<string>();
+    const inStack = new Set<string>();
+
+    function hasCycle(id: string): boolean {
+      if (inStack.has(id)) return true;
+      if (visited.has(id)) return false;
+      visited.add(id);
+      inStack.add(id);
+      for (const upId of adj.get(id) ?? []) {
+        if (hasCycle(upId)) return true;
+      }
+      inStack.delete(id);
+      return false;
+    }
+
+    for (const p of pipelines) {
+      expect(hasCycle(p.id)).toBe(false);
+    }
+  });
+
+  it("should have at least one pipeline with upstream dependencies", () => {
+    const withUpstream = pipelines.filter(
+      (p) => p.upstreamPipelineIds.length > 0
+    );
+    expect(withUpstream.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("should have at least one source pipeline with no upstream dependencies", () => {
+    const sourcePipelines = pipelines.filter(
+      (p) => p.upstreamPipelineIds.length === 0
+    );
+    expect(sourcePipelines.length).toBeGreaterThanOrEqual(1);
+  });
+});

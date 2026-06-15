@@ -60,6 +60,7 @@ export interface Pipeline {
   status: PipelineStatus;
   etlType: ETLType;
   sources: DataSource[];
+  upstreamPipelineIds: string[];
   qualityChecks: DataQualityCheck[];
   jobs: ETLJob[];
   runs: PipelineRun[];

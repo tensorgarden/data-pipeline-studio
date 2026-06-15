@@ -96,6 +96,11 @@ function PipelineRow({ pipeline }: { pipeline: Pipeline }) {
               {pipeline.status}
             </Badge>
             <Badge variant="info">{pipeline.etlType}</Badge>
+            {pipeline.upstreamPipelineIds.length > 0 && (
+              <span className="text-xs text-slate-400" title={`Upstream: ${pipeline.upstreamPipelineIds.join(", ")}`}>
+                ↑{pipeline.upstreamPipelineIds.length}
+              </span>
+            )}
           </div>
           <p className="mt-0.5 truncate text-xs text-slate-500">
             {pipeline.description}
