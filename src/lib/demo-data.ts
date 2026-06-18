@@ -6,6 +6,7 @@ import {
   ETLJob,
   DataMetrics,
   QualityBreakdown,
+  DataFreshness,
 } from "./types";
 
 export const dataQualityChecks: DataQualityCheck[] = [
@@ -128,6 +129,97 @@ export const dataQualityChecks: DataQualityCheck[] = [
     score: 96.9,
     threshold: 90,
     lastRun: "2026-06-09T10:00:00Z",
+  },
+];
+
+export const dataFreshnessRecords: DataFreshness[] = [
+  {
+    id: "freshness-1",
+    pipelineId: "p-1",
+    expectedMaxAgeMinutes: 60,
+    actualAgeMinutes: 28,
+    status: "fresh",
+    lastChecked: "2026-06-09T10:58:00Z",
+    nextCheckDue: "2026-06-09T11:30:00Z",
+    businessImpact:
+      "Customer 360 dashboard remains within the hourly CRM reporting SLO for sales leadership.",
+  },
+  {
+    id: "freshness-2",
+    pipelineId: "p-2",
+    expectedMaxAgeMinutes: 5,
+    actualAgeMinutes: 3,
+    status: "fresh",
+    lastChecked: "2026-06-09T10:59:30Z",
+    nextCheckDue: "2026-06-09T11:04:30Z",
+    businessImpact:
+      "Real-time funnel analytics can still support campaign pacing decisions without stale clickstream signals.",
+  },
+  {
+    id: "freshness-3",
+    pipelineId: "p-3",
+    expectedMaxAgeMinutes: 360,
+    actualAgeMinutes: 420,
+    status: "stale",
+    lastChecked: "2026-06-09T10:20:00Z",
+    nextCheckDue: "2026-06-09T10:35:00Z",
+    businessImpact:
+      "Executive revenue rollups are outside the six-hour SLO while the S3 data lake aggregation failure is investigated.",
+  },
+  {
+    id: "freshness-4",
+    pipelineId: "p-4",
+    expectedMaxAgeMinutes: 30,
+    actualAgeMinutes: 22,
+    status: "fresh",
+    lastChecked: "2026-06-09T10:55:00Z",
+    nextCheckDue: "2026-06-09T11:25:00Z",
+    businessImpact:
+      "Personalization segments are current enough for profile enrichment and cache refresh decisions.",
+  },
+  {
+    id: "freshness-5",
+    pipelineId: "p-5",
+    expectedMaxAgeMinutes: 15,
+    actualAgeMinutes: 48,
+    status: "stale",
+    lastChecked: "2026-06-09T10:45:00Z",
+    nextCheckDue: "2026-06-09T11:00:00Z",
+    businessImpact:
+      "CRM webhook lag may cause account teams to miss handoff alerts from high-intent customer events.",
+  },
+  {
+    id: "freshness-6",
+    pipelineId: "p-6",
+    expectedMaxAgeMinutes: 1440,
+    actualAgeMinutes: 90,
+    status: "fresh",
+    lastChecked: "2026-06-09T10:30:00Z",
+    nextCheckDue: "2026-06-10T01:30:00Z",
+    businessImpact:
+      "The overnight lake load remains fresh enough to feed downstream daily aggregation jobs.",
+  },
+  {
+    id: "freshness-7",
+    pipelineId: "p-7",
+    expectedMaxAgeMinutes: 5,
+    actualAgeMinutes: 17,
+    status: "stale",
+    lastChecked: "2026-06-09T10:32:00Z",
+    nextCheckDue: "2026-06-09T10:37:00Z",
+    businessImpact:
+      "Paused cache warming is creating stale user-profile lookups for latency-sensitive product surfaces.",
+  },
+  {
+    id: "freshness-8",
+    pipelineId: "p-8",
+    expectedMaxAgeMinutes: 1440,
+    actualAgeMinutes: null,
+    status: "unknown",
+    lastChecked: "2026-06-09T10:05:00Z",
+    nextCheckDue: "2026-06-10T04:30:00Z",
+    businessImpact:
+      "Archive freshness cannot be confirmed until the MongoDB connector recovers and emits a trusted watermark.",
   },
 ];
 

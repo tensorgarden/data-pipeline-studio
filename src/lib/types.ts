@@ -4,6 +4,7 @@ export type ETLType = "batch" | "streaming" | "scheduled" | "event-driven";
 export type ConnectorType = "postgres" | "mysql" | "bigquery" | "s3" | "kafka" | "redis" | "api" | "mongodb";
 export type ConnectorHealth = "healthy" | "degraded" | "down" | "unknown";
 export type QualityStatus = "pass" | "warn" | "fail" | "pending";
+export type FreshnessStatus = "fresh" | "stale" | "unknown";
 
 export interface DataSource {
   id: string;
@@ -24,6 +25,17 @@ export interface DataQualityCheck {
   score: number;
   threshold: number;
   lastRun: string;
+}
+
+export interface DataFreshness {
+  id: string;
+  pipelineId: string;
+  expectedMaxAgeMinutes: number;
+  actualAgeMinutes: number | null;
+  status: FreshnessStatus;
+  lastChecked: string;
+  nextCheckDue: string;
+  businessImpact: string;
 }
 
 export interface ETLJob {

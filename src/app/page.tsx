@@ -16,11 +16,7 @@ import {
   ProgressBar,
   StatCard,
 } from "@/components/ui";
-import type {
-  Pipeline,
-  PipelineRun,
-  ETLJob,
-} from "@/lib/types";
+import type { Pipeline } from "@/lib/types";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function statusVariant(
@@ -79,7 +75,6 @@ function timeAgo(iso: string): string {
 // ── Pipeline Row ───────────────────────────────────────────────────────────
 function PipelineRow({ pipeline }: { pipeline: Pipeline }) {
   const lastRun = pipeline.runs[0];
-  const variant = pipeline.status === "active" ? "success" : pipeline.status === "failed" ? "danger" : "warning";
 
   return (
     <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

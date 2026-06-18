@@ -3,11 +3,9 @@ import {
   pipelines,
   pipelineRuns,
   sourceConnectors,
-  etlJobs,
-  dataQualityChecks,
+  dataFreshnessRecords,
   computeMetrics,
 } from "@/lib/demo-data";
-import type { Pipeline, PipelineRun } from "@/lib/types";
 
 describe("demo-data: pipelines", () => {
   it("should have exactly 8 pipelines", () => {
@@ -67,6 +65,58 @@ describe("demo-data: source connectors", () => {
       (s) => s.health === "degraded" || s.health === "down"
     );
     expect(unhealthy.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("demo-data: data freshness SLOs", () => {
+  const knownPipelineIds = new Set(pipelines.map((p) => p.id));
+
+  it("should track one freshness record per pipeline with valid references", () => {
+    const freshnessIds = new Set(dataFreshnessRecords.map((r) => r.id));
+
+    expect(dataFreshnessRecords).toHaveLength(pipelines.length);
+    expect(freshnessIds.size).toBe(dataFreshnessRecords.length);
+
+    for (const record of dataFreshnessRecords) {
+      expect(knownPipelineIds.has(record.pipelineId)).toBe(true);
+      expect(record.expectedMaxAgeMinutes).toBeGreaterThan(0);
+      expect(Number.isNaN(Date.parse(record.lastChecked))).toBe(false);
+      expect(Number.isNaN(Date.parse(record.nextCheckDue))).toBe(false);
+      expect(record.businessImpact.length).toBeGreaterThan(40);
+    }
+  });
+
+  it("should classify freshness status against the pipeline's max-age SLO", () => {
+    for (const record of dataFreshnessRecords) {
+      if (record.status === "fresh") {
+        expect(record.actualAgeMinutes).not.toBeNull();
+        expect(record.actualAgeMinutes ?? Infinity).toBeLessThanOrEqual(
+          record.expectedMaxAgeMinutes
+        );
+      }
+
+      if (record.status === "stale") {
+        expect(record.actualAgeMinutes).not.toBeNull();
+        expect(record.actualAgeMinutes ?? 0).toBeGreaterThan(
+          record.expectedMaxAgeMinutes
+        );
+      }
+
+      if (record.status === "unknown") {
+        expect(record.actualAgeMinutes).toBeNull();
+      }
+    }
+  });
+
+  it("should surface stale or unknown freshness risk for operations review", () => {
+    const riskyRecords = dataFreshnessRecords.filter(
+      (record) => record.status === "stale" || record.status === "unknown"
+    );
+
+    expect(riskyRecords.length).toBeGreaterThanOrEqual(1);
+    expect(riskyRecords.every((record) => record.businessImpact.length > 40)).toBe(
+      true
+    );
   });
 });
 
