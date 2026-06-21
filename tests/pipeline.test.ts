@@ -4,6 +4,7 @@ import {
   pipelineRuns,
   sourceConnectors,
   dataFreshnessRecords,
+  runErrorBreakdowns,
   computeMetrics,
 } from "@/lib/demo-data";
 
@@ -119,6 +120,71 @@ describe("demo-data: data freshness SLOs", () => {
     );
   });
 });
+
+describe("demo-data: run error triage", () => {
+  const runsById = new Map(pipelineRuns.map((run) => [run.id, run]));
+  const breakdownFields = [
+    "schemaViolations",
+    "nullViolations",
+    "timeouts",
+    "duplicates",
+    "connectorErrors",
+  ] as const;
+  const primaryCategoryField = {
+    schema_violation: "schemaViolations",
+    null_violation: "nullViolations",
+    timeout: "timeouts",
+    duplicate: "duplicates",
+    connector_error: "connectorErrors",
+  } as const;
+
+  it("should categorize every run with recorded errors", () => {
+    const erroringRuns = pipelineRuns.filter((run) => run.errors > 0);
+    const breakdownIds = new Set(runErrorBreakdowns.map((b) => b.runId));
+
+    expect(runErrorBreakdowns).toHaveLength(erroringRuns.length);
+    for (const run of erroringRuns) {
+      expect(breakdownIds.has(run.id)).toBe(true);
+    }
+
+    for (const breakdown of runErrorBreakdowns) {
+      const run = runsById.get(breakdown.runId);
+      expect(run).toBeDefined();
+      expect(run?.errors).toBeGreaterThan(0);
+      const categorizedErrors = breakdownFields.reduce(
+        (total, field) => total + breakdown[field],
+        0
+      );
+      expect(categorizedErrors).toBe(run?.errors);
+      expect(breakdown.remediationHint.length).toBeGreaterThan(60);
+    }
+  });
+
+  it("should align each primary category with the largest error bucket", () => {
+    for (const breakdown of runErrorBreakdowns) {
+      const primaryField = primaryCategoryField[breakdown.primaryCategory];
+      const primaryValue = breakdown[primaryField];
+
+      for (const field of breakdownFields) {
+        expect(primaryValue).toBeGreaterThanOrEqual(breakdown[field]);
+      }
+    }
+  });
+
+  it("should aggregate categorized errors into metrics", () => {
+    const metrics = computeMetrics();
+    const categorizedTotal = breakdownFields.reduce(
+      (total, field) => total + metrics.errorBreakdownByCategory[field],
+      0
+    );
+    const totalRunErrors = pipelineRuns.reduce((total, run) => total + run.errors, 0);
+
+    expect(categorizedTotal).toBe(totalRunErrors);
+    expect(metrics.errorBreakdownByCategory.schemaViolations).toBeGreaterThan(0);
+    expect(metrics.errorBreakdownByCategory.timeouts).toBeGreaterThan(0);
+  });
+});
+
 
 describe("demo-data: computeMetrics", () => {
   it("should return correct totalPipelines count", () => {

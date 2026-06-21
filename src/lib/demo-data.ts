@@ -7,6 +7,8 @@ import {
   DataMetrics,
   QualityBreakdown,
   DataFreshness,
+  ErrorBreakdown,
+  RunErrorBreakdown,
 } from "./types";
 
 export const dataQualityChecks: DataQualityCheck[] = [
@@ -478,6 +480,153 @@ export const pipelineRuns: PipelineRun[] = [
   },
 ];
 
+
+export const runErrorBreakdowns: RunErrorBreakdown[] = [
+  {
+    runId: "run-1",
+    schemaViolations: 12,
+    nullViolations: 96,
+    timeouts: 0,
+    duplicates: 20,
+    connectorErrors: 0,
+    primaryCategory: "null_violation",
+    remediationHint:
+      "Review required customer profile fields before the hourly CRM load publishes leadership dashboard snapshots.",
+  },
+  {
+    runId: "run-2",
+    schemaViolations: 10,
+    nullViolations: 60,
+    timeouts: 0,
+    duplicates: 20,
+    connectorErrors: 0,
+    primaryCategory: "null_violation",
+    remediationHint:
+      "Backfill optional CRM attributes and verify dedupe keys before the next Customer 360 sync window.",
+  },
+  {
+    runId: "run-3",
+    schemaViolations: 0,
+    nullViolations: 20,
+    timeouts: 18,
+    duplicates: 0,
+    connectorErrors: 12,
+    primaryCategory: "null_violation",
+    remediationHint:
+      "Check streaming watermarks and Kafka consumer lag before campaign pacing data exceeds the five-minute SLA.",
+  },
+  {
+    runId: "run-4",
+    schemaViolations: 0,
+    nullViolations: 8,
+    timeouts: 2,
+    duplicates: 5,
+    connectorErrors: 0,
+    primaryCategory: "null_violation",
+    remediationHint:
+      "Sample clickstream events for missing campaign IDs and replay duplicate-safe offsets after validation.",
+  },
+  {
+    runId: "run-5",
+    schemaViolations: 2800,
+    nullViolations: 1200,
+    timeouts: 450,
+    duplicates: 0,
+    connectorErrors: 350,
+    primaryCategory: "schema_violation",
+    remediationHint:
+      "Hold the revenue rollup, diff S3 partition schemas, and escalate upstream contract drift before executive reporting.",
+  },
+  {
+    runId: "run-6",
+    schemaViolations: 750,
+    nullViolations: 500,
+    timeouts: 150,
+    duplicates: 100,
+    connectorErrors: 0,
+    primaryCategory: "schema_violation",
+    remediationHint:
+      "Audit historical S3 partitions for schema drift and queue a typed transform patch before the next daily aggregate.",
+  },
+  {
+    runId: "run-7",
+    schemaViolations: 200,
+    nullViolations: 350,
+    timeouts: 0,
+    duplicates: 250,
+    connectorErrors: 0,
+    primaryCategory: "null_violation",
+    remediationHint:
+      "Inspect enrichment join keys and customer ID nullability before personalization segments refresh downstream caches.",
+  },
+  {
+    runId: "run-9",
+    schemaViolations: 0,
+    nullViolations: 5,
+    timeouts: 10,
+    duplicates: 0,
+    connectorErrors: 5,
+    primaryCategory: "timeout",
+    remediationHint:
+      "Throttle CRM webhook retries and verify API gateway health before account handoff alerts drift further behind.",
+  },
+  {
+    runId: "run-10",
+    schemaViolations: 0,
+    nullViolations: 2,
+    timeouts: 1,
+    duplicates: 0,
+    connectorErrors: 2,
+    primaryCategory: "null_violation",
+    remediationHint:
+      "Watch the active CRM event stream for connector retries and missing account IDs before replaying pending webhooks.",
+  },
+  {
+    runId: "run-11",
+    schemaViolations: 1200,
+    nullViolations: 2600,
+    timeouts: 600,
+    duplicates: 300,
+    connectorErrors: 300,
+    primaryCategory: "null_violation",
+    remediationHint:
+      "Validate required PostgreSQL export fields before publishing the overnight lake load to dependent aggregate jobs.",
+  },
+  {
+    runId: "run-13",
+    schemaViolations: 0,
+    nullViolations: 20,
+    timeouts: 0,
+    duplicates: 30,
+    connectorErrors: 0,
+    primaryCategory: "duplicate",
+    remediationHint:
+      "Quarantine duplicate cache refresh keys and confirm idempotent Redis writes before re-enabling high-frequency warming.",
+  },
+  {
+    runId: "run-14",
+    schemaViolations: 5000,
+    nullViolations: 1800,
+    timeouts: 2200,
+    duplicates: 0,
+    connectorErrors: 2200,
+    primaryCategory: "schema_violation",
+    remediationHint:
+      "Keep cache warming paused while schema drift and connector retries are resolved to prevent stale profile lookups.",
+  },
+  {
+    runId: "run-15",
+    schemaViolations: 40,
+    nullViolations: 60,
+    timeouts: 20,
+    duplicates: 30,
+    connectorErrors: 0,
+    primaryCategory: "null_violation",
+    remediationHint:
+      "Verify archive transform defaults before MongoDB event history is promoted into long-term analytics storage.",
+  },
+];
+
 export const etlJobs: ETLJob[] = [
   {
     id: "job-1",
@@ -736,6 +885,24 @@ export function computeMetrics(): DataMetrics {
       ? Math.round((todayErrors / todayRecords) * 10000) / 100
       : 0;
 
+  const emptyErrorBreakdown: ErrorBreakdown = {
+    schemaViolations: 0,
+    nullViolations: 0,
+    timeouts: 0,
+    duplicates: 0,
+    connectorErrors: 0,
+  };
+  const errorBreakdownByCategory = runErrorBreakdowns.reduce<ErrorBreakdown>(
+    (acc, breakdown) => ({
+      schemaViolations: acc.schemaViolations + breakdown.schemaViolations,
+      nullViolations: acc.nullViolations + breakdown.nullViolations,
+      timeouts: acc.timeouts + breakdown.timeouts,
+      duplicates: acc.duplicates + breakdown.duplicates,
+      connectorErrors: acc.connectorErrors + breakdown.connectorErrors,
+    }),
+    emptyErrorBreakdown
+  );
+
   const allChecks = pipelines.flatMap((p) => p.qualityChecks);
   const qualityChecksByStatus: QualityBreakdown = {
     pass: allChecks.filter((q) => q.status === "pass").length,
@@ -784,5 +951,6 @@ export function computeMetrics(): DataMetrics {
     uptimePercent: avgUptime,
     qualityChecksByStatus,
     errorRatePercent,
+    errorBreakdownByCategory,
   };
 }

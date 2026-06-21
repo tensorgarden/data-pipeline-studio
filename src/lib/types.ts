@@ -5,6 +5,12 @@ export type ConnectorType = "postgres" | "mysql" | "bigquery" | "s3" | "kafka" |
 export type ConnectorHealth = "healthy" | "degraded" | "down" | "unknown";
 export type QualityStatus = "pass" | "warn" | "fail" | "pending";
 export type FreshnessStatus = "fresh" | "stale" | "unknown";
+export type PipelineErrorCategory =
+  | "schema_violation"
+  | "null_violation"
+  | "timeout"
+  | "duplicate"
+  | "connector_error";
 
 export interface DataSource {
   id: string;
@@ -36,6 +42,20 @@ export interface DataFreshness {
   lastChecked: string;
   nextCheckDue: string;
   businessImpact: string;
+}
+
+export interface ErrorBreakdown {
+  schemaViolations: number;
+  nullViolations: number;
+  timeouts: number;
+  duplicates: number;
+  connectorErrors: number;
+}
+
+export interface RunErrorBreakdown extends ErrorBreakdown {
+  runId: string;
+  primaryCategory: PipelineErrorCategory;
+  remediationHint: string;
 }
 
 export interface ETLJob {
@@ -101,4 +121,5 @@ export interface DataMetrics {
   uptimePercent: number;
   qualityChecksByStatus: QualityBreakdown;
   errorRatePercent: number;
+  errorBreakdownByCategory: ErrorBreakdown;
 }

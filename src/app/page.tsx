@@ -16,7 +16,7 @@ import {
   ProgressBar,
   StatCard,
 } from "@/components/ui";
-import type { Pipeline } from "@/lib/types";
+import type { ErrorBreakdown, Pipeline } from "@/lib/types";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function statusVariant(
@@ -190,11 +190,13 @@ function QualityDashboard({
   warn,
   fail,
   errorRatePercent,
+  errorBreakdown,
 }: {
   pass: number;
   warn: number;
   fail: number;
   errorRatePercent: number;
+  errorBreakdown: ErrorBreakdown;
 }) {
   const allChecks = pipelines.flatMap((p) => p.qualityChecks);
   const avgScore =
@@ -203,6 +205,13 @@ function QualityDashboard({
           (allChecks.reduce((s, q) => s + q.score, 0) / allChecks.length) * 10
         ) / 10
       : 0;
+  const errorCategories = [
+    { label: "Schema", value: errorBreakdown.schemaViolations },
+    { label: "Nulls", value: errorBreakdown.nullViolations },
+    { label: "Timeouts", value: errorBreakdown.timeouts },
+    { label: "Duplicates", value: errorBreakdown.duplicates },
+    { label: "Connector", value: errorBreakdown.connectorErrors },
+  ].filter((category) => category.value > 0);
 
   return (
     <Card>
@@ -246,6 +255,24 @@ function QualityDashboard({
         >
           {errorRatePercent}%
         </p>
+      </div>
+      <div className="mb-4 rounded-lg border border-slate-100 p-3">
+        <p className="mb-2 text-xs font-medium text-slate-600">
+          Error triage mix
+        </p>
+        <div className="space-y-1">
+          {errorCategories.map((category) => (
+            <div
+              key={category.label}
+              className="flex items-center justify-between text-xs"
+            >
+              <span className="text-slate-500">{category.label}</span>
+              <span className="font-mono font-semibold text-slate-700">
+                {category.value.toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="space-y-2">
         {allChecks.map((check) => (
@@ -552,6 +579,7 @@ export default function Page() {
           warn={metrics.qualityChecksByStatus.warn}
           fail={metrics.qualityChecksByStatus.fail}
           errorRatePercent={metrics.errorRatePercent}
+          errorBreakdown={metrics.errorBreakdownByCategory}
         />
       </div>
 
