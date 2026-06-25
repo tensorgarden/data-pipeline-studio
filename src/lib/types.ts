@@ -5,6 +5,13 @@ export type ConnectorType = "postgres" | "mysql" | "bigquery" | "s3" | "kafka" |
 export type ConnectorHealth = "healthy" | "degraded" | "down" | "unknown";
 export type QualityStatus = "pass" | "warn" | "fail" | "pending";
 export type FreshnessStatus = "fresh" | "stale" | "unknown";
+export type SchemaDriftChangeType =
+  | "column_added"
+  | "column_removed"
+  | "type_changed"
+  | "semantic_change";
+export type SchemaDriftSeverity = "info" | "warning" | "breaking";
+export type SchemaDriftStatus = "monitoring" | "remediating" | "resolved";
 export type PipelineErrorCategory =
   | "schema_violation"
   | "null_violation"
@@ -42,6 +49,19 @@ export interface DataFreshness {
   lastChecked: string;
   nextCheckDue: string;
   businessImpact: string;
+}
+
+export interface SchemaDriftEvent {
+  id: string;
+  pipelineId: string;
+  sourceId: string;
+  fieldName: string;
+  changeType: SchemaDriftChangeType;
+  severity: SchemaDriftSeverity;
+  status: SchemaDriftStatus;
+  detectedAt: string;
+  downstreamPipelineIds: string[];
+  remediationPlan: string;
 }
 
 export interface ErrorBreakdown {

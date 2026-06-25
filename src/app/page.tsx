@@ -7,6 +7,7 @@ import {
   pipelineRuns,
   sourceConnectors,
   etlJobs,
+  schemaDriftEvents,
   computeMetrics,
 } from "@/lib/demo-data";
 import {
@@ -212,6 +213,9 @@ function QualityDashboard({
     { label: "Duplicates", value: errorBreakdown.duplicates },
     { label: "Connector", value: errorBreakdown.connectorErrors },
   ].filter((category) => category.value > 0);
+  const activeDriftEvents = schemaDriftEvents.filter(
+    (event) => event.status !== "resolved"
+  );
 
   return (
     <Card>
@@ -272,6 +276,54 @@ function QualityDashboard({
               </span>
             </div>
           ))}
+        </div>
+      </div>
+      <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50 p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-xs font-medium text-amber-800">
+            Schema drift watch
+          </p>
+          <span className="text-xs text-amber-700">
+            {activeDriftEvents.length} active
+          </span>
+        </div>
+        <div className="space-y-2">
+          {activeDriftEvents.map((event) => {
+            const pipe = pipelines.find((p) => p.id === event.pipelineId);
+            const downstreamNames = event.downstreamPipelineIds
+              .map((id) => pipelines.find((p) => p.id === id)?.name ?? id)
+              .join(", ");
+
+            return (
+              <div
+                key={event.id}
+                className="rounded-md bg-white/70 p-2 text-xs"
+              >
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="font-medium text-slate-700">
+                    {pipe?.name ?? event.pipelineId}
+                  </span>
+                  <Badge
+                    variant={
+                      event.severity === "breaking"
+                        ? "danger"
+                        : event.severity === "warning"
+                          ? "warning"
+                          : "info"
+                    }
+                  >
+                    {event.severity}
+                  </Badge>
+                </div>
+                <p className="text-slate-500">
+                  {event.fieldName} · {event.changeType.replace("_", " ")} · {timeAgo(event.detectedAt)}
+                </p>
+                <p className="mt-1 text-amber-700">
+                  Downstream: {downstreamNames || "none"}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
       <div className="space-y-2">

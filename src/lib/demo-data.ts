@@ -9,6 +9,7 @@ import {
   DataFreshness,
   ErrorBreakdown,
   RunErrorBreakdown,
+  SchemaDriftEvent,
 } from "./types";
 
 export const dataQualityChecks: DataQualityCheck[] = [
@@ -222,6 +223,48 @@ export const dataFreshnessRecords: DataFreshness[] = [
     nextCheckDue: "2026-06-10T04:30:00Z",
     businessImpact:
       "Archive freshness cannot be confirmed until the MongoDB connector recovers and emits a trusted watermark.",
+  },
+];
+
+export const schemaDriftEvents: SchemaDriftEvent[] = [
+  {
+    id: "drift-1",
+    pipelineId: "p-6",
+    sourceId: "src-1",
+    fieldName: "account_tier",
+    changeType: "type_changed",
+    severity: "breaking",
+    status: "remediating",
+    detectedAt: "2026-06-09T10:11:00Z",
+    downstreamPipelineIds: ["p-3"],
+    remediationPlan:
+      "Hold Data Lake Aggregator publishing, update the typed revenue transform, and replay the overnight load after the PostgreSQL contract is approved.",
+  },
+  {
+    id: "drift-2",
+    pipelineId: "p-5",
+    sourceId: "src-7",
+    fieldName: "opportunity_stage_confidence",
+    changeType: "column_added",
+    severity: "warning",
+    status: "monitoring",
+    detectedAt: "2026-06-09T10:33:00Z",
+    downstreamPipelineIds: ["p-8"],
+    remediationPlan:
+      "Register the nullable CRM field in the MongoDB archive contract before promotion so downstream analysts see an intentional schema extension.",
+  },
+  {
+    id: "drift-3",
+    pipelineId: "p-2",
+    sourceId: "src-3",
+    fieldName: "session_referrer_url",
+    changeType: "semantic_change",
+    severity: "info",
+    status: "resolved",
+    detectedAt: "2026-06-09T09:52:00Z",
+    downstreamPipelineIds: [],
+    remediationPlan:
+      "Documented the campaign-tagging semantic shift and confirmed real-time funnel analytics dashboards already normalize the new URL format.",
   },
 ];
 

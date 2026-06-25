@@ -5,6 +5,7 @@ import {
   sourceConnectors,
   dataFreshnessRecords,
   runErrorBreakdowns,
+  schemaDriftEvents,
   computeMetrics,
 } from "@/lib/demo-data";
 
@@ -118,6 +119,82 @@ describe("demo-data: data freshness SLOs", () => {
     expect(riskyRecords.every((record) => record.businessImpact.length > 40)).toBe(
       true
     );
+  });
+});
+
+describe("demo-data: schema drift impact tracking", () => {
+  const pipelineIds = new Set(pipelines.map((p) => p.id));
+  const sourceIds = new Set(sourceConnectors.map((s) => s.id));
+  const downstreamByPipeline = new Map<string, string[]>();
+
+  for (const pipeline of pipelines) {
+    for (const upstreamId of pipeline.upstreamPipelineIds) {
+      downstreamByPipeline.set(upstreamId, [
+        ...(downstreamByPipeline.get(upstreamId) ?? []),
+        pipeline.id,
+      ]);
+    }
+  }
+
+  function hasDownstreamPath(
+    startId: string,
+    targetId: string,
+    visited = new Set<string>()
+  ): boolean {
+    if (visited.has(startId)) return false;
+    visited.add(startId);
+
+    for (const childId of downstreamByPipeline.get(startId) ?? []) {
+      if (childId === targetId) return true;
+      if (hasDownstreamPath(childId, targetId, visited)) return true;
+    }
+
+    return false;
+  }
+
+  it("should track schema drift events with valid source and pipeline references", () => {
+    const eventIds = new Set(schemaDriftEvents.map((event) => event.id));
+
+    expect(schemaDriftEvents.length).toBeGreaterThanOrEqual(3);
+    expect(eventIds.size).toBe(schemaDriftEvents.length);
+
+    for (const event of schemaDriftEvents) {
+      expect(pipelineIds.has(event.pipelineId)).toBe(true);
+      expect(sourceIds.has(event.sourceId)).toBe(true);
+      expect(Number.isNaN(Date.parse(event.detectedAt))).toBe(false);
+      expect(event.fieldName.trim().length).toBeGreaterThan(3);
+      expect(event.remediationPlan.length).toBeGreaterThan(60);
+    }
+  });
+
+  it("should map breaking schema drift to downstream impact", () => {
+    const breakingEvents = schemaDriftEvents.filter(
+      (event) => event.severity === "breaking"
+    );
+
+    expect(breakingEvents.length).toBeGreaterThanOrEqual(1);
+
+    for (const event of breakingEvents) {
+      expect(event.status).not.toBe("resolved");
+      expect(event.downstreamPipelineIds.length).toBeGreaterThanOrEqual(1);
+
+      for (const downstreamId of event.downstreamPipelineIds) {
+        expect(pipelineIds.has(downstreamId)).toBe(true);
+        expect(hasDownstreamPath(event.pipelineId, downstreamId)).toBe(true);
+      }
+    }
+  });
+
+  it("should distinguish monitoring, remediation, and resolved drift states", () => {
+    const statuses = new Set(schemaDriftEvents.map((event) => event.status));
+    const severities = new Set(schemaDriftEvents.map((event) => event.severity));
+
+    expect(statuses.has("monitoring")).toBe(true);
+    expect(statuses.has("remediating")).toBe(true);
+    expect(statuses.has("resolved")).toBe(true);
+    expect(severities.has("breaking")).toBe(true);
+    expect(severities.has("warning")).toBe(true);
+    expect(severities.has("info")).toBe(true);
   });
 });
 
