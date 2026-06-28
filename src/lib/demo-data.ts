@@ -10,6 +10,7 @@ import {
   ErrorBreakdown,
   RunErrorBreakdown,
   SchemaDriftEvent,
+  ObservabilityAlert,
 } from "./types";
 
 export const dataQualityChecks: DataQualityCheck[] = [
@@ -265,6 +266,68 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     downstreamPipelineIds: [],
     remediationPlan:
       "Documented the campaign-tagging semantic shift and confirmed real-time funnel analytics dashboards already normalize the new URL format.",
+  },
+];
+
+
+export const observabilityAlerts: ObservabilityAlert[] = [
+  {
+    id: "alert-1",
+    pipelineId: "p-6",
+    alertKind: "schema_drift",
+    title: "Contract drift threatens overnight lake load",
+    severity: "critical",
+    businessCriticality: "critical",
+    triggeredAt: "2026-06-09T10:12:00Z",
+    relatedAlertIds: ["alert-2"],
+    downstreamPipelineIds: ["p-3"],
+    affectedAssets: [
+      "Executive revenue rollup dashboard",
+      "Revenue forecast feature store",
+      "Board metrics export",
+    ],
+    priority: "page_on_call",
+    triageRationale:
+      "Breaking account_tier drift in the root overnight load maps through lineage to the failed daily aggregate, so one upstream contract fix can suppress the downstream freshness and quality alert noise.",
+    recommendedAction:
+      "Page the data platform owner, freeze revenue rollup publishing, approve the PostgreSQL contract change, then replay p-6 before p-3 restarts.",
+  },
+  {
+    id: "alert-2",
+    pipelineId: "p-3",
+    alertKind: "freshness_slo",
+    title: "Revenue aggregate breached six-hour freshness SLO",
+    severity: "warning",
+    businessCriticality: "high",
+    triggeredAt: "2026-06-09T10:20:00Z",
+    relatedAlertIds: ["alert-1"],
+    downstreamPipelineIds: [],
+    affectedAssets: [
+      "Executive revenue rollup dashboard",
+      "Financial anomaly notebook",
+    ],
+    priority: "same_day_review",
+    triageRationale:
+      "This stale aggregate is grouped with the upstream contract-drift alert instead of paging a second team, keeping analysts focused on the root cause behind the revenue reporting delay.",
+    recommendedAction:
+      "Keep the stale-data banner visible to finance analysts, then clear the SLO breach only after the overnight load replay refreshes the aggregate watermark.",
+  },
+  {
+    id: "alert-3",
+    pipelineId: "p-8",
+    alertKind: "connector_health",
+    title: "Mongo archive connector has no trusted watermark",
+    severity: "warning",
+    businessCriticality: "medium",
+    triggeredAt: "2026-06-09T10:05:00Z",
+    relatedAlertIds: [],
+    downstreamPipelineIds: [],
+    affectedAssets: ["Archive backfill workspace"],
+    priority: "watch",
+    triageRationale:
+      "The archive connector is down, but no critical live dashboard depends on the disabled batch job today, so the alert stays visible without escalating on-call noise.",
+    recommendedAction:
+      "Open a same-week connector repair ticket, preserve the unknown freshness state, and avoid replaying archive loads until MongoDB emits a trusted watermark.",
   },
 ];
 

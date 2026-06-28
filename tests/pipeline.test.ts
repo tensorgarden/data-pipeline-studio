@@ -6,6 +6,7 @@ import {
   dataFreshnessRecords,
   runErrorBreakdowns,
   schemaDriftEvents,
+  observabilityAlerts,
   computeMetrics,
 } from "@/lib/demo-data";
 
@@ -262,6 +263,85 @@ describe("demo-data: run error triage", () => {
   });
 });
 
+
+
+describe("demo-data: context-aware alert triage", () => {
+  const pipelineIds = new Set(pipelines.map((p) => p.id));
+  const alertIds = new Set(observabilityAlerts.map((alert) => alert.id));
+  const downstreamByPipeline = new Map<string, string[]>();
+
+  for (const pipeline of pipelines) {
+    for (const upstreamId of pipeline.upstreamPipelineIds) {
+      downstreamByPipeline.set(upstreamId, [
+        ...(downstreamByPipeline.get(upstreamId) ?? []),
+        pipeline.id,
+      ]);
+    }
+  }
+
+  function hasDownstreamPath(
+    startId: string,
+    targetId: string,
+    visited = new Set<string>()
+  ): boolean {
+    if (visited.has(startId)) return false;
+    visited.add(startId);
+
+    for (const childId of downstreamByPipeline.get(startId) ?? []) {
+      if (childId === targetId) return true;
+      if (hasDownstreamPath(childId, targetId, visited)) return true;
+    }
+
+    return false;
+  }
+
+  it("should prioritize alerts with valid pipeline references and actionable context", () => {
+    expect(observabilityAlerts.length).toBeGreaterThanOrEqual(3);
+    expect(alertIds.size).toBe(observabilityAlerts.length);
+
+    for (const alert of observabilityAlerts) {
+      expect(pipelineIds.has(alert.pipelineId)).toBe(true);
+      expect(Number.isNaN(Date.parse(alert.triggeredAt))).toBe(false);
+      expect(alert.affectedAssets.length).toBeGreaterThanOrEqual(1);
+      expect(alert.triageRationale.length).toBeGreaterThan(80);
+      expect(alert.recommendedAction.length).toBeGreaterThan(80);
+    }
+  });
+
+  it("should cluster related alerts without invalid or self-referencing IDs", () => {
+    const clusteredAlerts = observabilityAlerts.filter(
+      (alert) => alert.relatedAlertIds.length > 0
+    );
+
+    expect(clusteredAlerts.length).toBeGreaterThanOrEqual(1);
+
+    for (const alert of observabilityAlerts) {
+      expect(alert.relatedAlertIds).not.toContain(alert.id);
+      for (const relatedId of alert.relatedAlertIds) {
+        expect(alertIds.has(relatedId)).toBe(true);
+      }
+    }
+  });
+
+  it("should reserve paging for high-impact alerts with verified downstream context", () => {
+    const pagingAlerts = observabilityAlerts.filter(
+      (alert) => alert.priority === "page_on_call"
+    );
+
+    expect(pagingAlerts.length).toBeGreaterThanOrEqual(1);
+
+    for (const alert of pagingAlerts) {
+      expect(["high", "critical"]).toContain(alert.businessCriticality);
+      expect(alert.affectedAssets.length).toBeGreaterThanOrEqual(2);
+      expect(alert.downstreamPipelineIds.length).toBeGreaterThanOrEqual(1);
+
+      for (const downstreamId of alert.downstreamPipelineIds) {
+        expect(pipelineIds.has(downstreamId)).toBe(true);
+        expect(hasDownstreamPath(alert.pipelineId, downstreamId)).toBe(true);
+      }
+    }
+  });
+});
 
 describe("demo-data: computeMetrics", () => {
   it("should return correct totalPipelines count", () => {

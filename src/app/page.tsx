@@ -8,6 +8,7 @@ import {
   sourceConnectors,
   etlJobs,
   schemaDriftEvents,
+  observabilityAlerts,
   computeMetrics,
 } from "@/lib/demo-data";
 import {
@@ -466,6 +467,14 @@ function SourceHealth() {
 
 // ── Alert Panel ────────────────────────────────────────────────────────────
 function AlertPanel() {
+  const priorityRank = {
+    page_on_call: 0,
+    same_day_review: 1,
+    watch: 2,
+  } as const;
+  const contextAlerts = [...observabilityAlerts].sort(
+    (a, b) => priorityRank[a.priority] - priorityRank[b.priority]
+  );
   const failedRuns = pipelineRuns.filter((r) => r.status === "failed");
   const failedPipelines = pipelines.filter((p) => p.status === "failed");
   const degradedSources = sourceConnectors.filter(
@@ -473,6 +482,7 @@ function AlertPanel() {
   );
 
   const hasAlerts =
+    contextAlerts.length > 0 ||
     failedRuns.length > 0 ||
     failedPipelines.length > 0 ||
     degradedSources.length > 0;
@@ -499,6 +509,38 @@ function AlertPanel() {
         </h2>
       </div>
       <div className="space-y-2 text-xs">
+        {contextAlerts.map((alert) => {
+          const pipe = pipelines.find((p) => p.id === alert.pipelineId);
+          const variant =
+            alert.severity === "critical"
+              ? "danger"
+              : alert.severity === "warning"
+                ? "warning"
+                : "info";
+
+          return (
+            <div key={alert.id} className="rounded bg-white p-3">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <StatusDot
+                    status={alert.severity === "critical" ? "failed" : "warn"}
+                  />
+                  <span className="font-medium text-amber-900">
+                    {alert.title}
+                  </span>
+                </div>
+                <Badge variant={variant}>{alert.priority.replaceAll("_", " ")}</Badge>
+              </div>
+              <p className="text-slate-600">
+                {pipe?.name ?? alert.pipelineId} · {alert.affectedAssets.length}
+                {" "}
+                affected assets · {alert.downstreamPipelineIds.length} downstream
+                pipelines
+              </p>
+              <p className="mt-1 text-amber-700">{alert.triageRationale}</p>
+            </div>
+          );
+        })}
         {failedPipelines.map((p) => (
           <div
             key={p.id}

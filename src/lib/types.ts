@@ -19,6 +19,34 @@ export type PipelineErrorCategory =
   | "duplicate"
   | "connector_error";
 
+export type ObservabilityAlertKind =
+  | "freshness_slo"
+  | "schema_drift"
+  | "volume_anomaly"
+  | "connector_health";
+export type ObservabilityAlertSeverity = "info" | "warning" | "critical";
+export type ObservabilityAlertPriority =
+  | "watch"
+  | "same_day_review"
+  | "page_on_call";
+export type BusinessCriticality = "low" | "medium" | "high" | "critical";
+
+export interface ObservabilityAlert {
+  id: string;
+  pipelineId: string;
+  alertKind: ObservabilityAlertKind;
+  title: string;
+  severity: ObservabilityAlertSeverity;
+  businessCriticality: BusinessCriticality;
+  triggeredAt: string;
+  relatedAlertIds: string[];
+  downstreamPipelineIds: string[];
+  affectedAssets: string[];
+  priority: ObservabilityAlertPriority;
+  triageRationale: string;
+  recommendedAction: string;
+}
+
 export interface DataSource {
   id: string;
   name: string;
