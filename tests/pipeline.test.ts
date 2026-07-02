@@ -341,6 +341,52 @@ describe("demo-data: context-aware alert triage", () => {
       }
     }
   });
+
+  it("should carry alert-correlation context that suppresses duplicate paging noise", () => {
+    for (const alert of observabilityAlerts) {
+      const { correlation } = alert;
+      expect(correlation.suppressionWindowMinutes).toBeGreaterThanOrEqual(5);
+      expect(correlation.suppressionWindowMinutes).toBeLessThanOrEqual(240);
+      expect(correlation.suppressedDuplicateCount).toBeGreaterThanOrEqual(0);
+      expect(correlation.clusterReason.length).toBeGreaterThan(60);
+
+      if (correlation.rootCauseAlertId) {
+        expect(alertIds.has(correlation.rootCauseAlertId)).toBe(true);
+        expect(correlation.rootCauseAlertId).not.toBe(alert.id);
+      }
+    }
+
+    const rootCauseAlerts = observabilityAlerts.filter(
+      (alert) => alert.correlation.suppressedDuplicateCount > 0
+    );
+    expect(rootCauseAlerts.length).toBeGreaterThanOrEqual(1);
+
+    for (const alert of rootCauseAlerts) {
+      expect(alert.priority).toBe("page_on_call");
+      expect(alert.relatedAlertIds.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("should keep downstream symptom alerts grouped under their root cause", () => {
+    const childAlerts = observabilityAlerts.filter(
+      (alert) => alert.correlation.rootCauseAlertId
+    );
+
+    expect(childAlerts.length).toBeGreaterThanOrEqual(1);
+
+    for (const alert of childAlerts) {
+      const root = observabilityAlerts.find(
+        (candidate) => candidate.id === alert.correlation.rootCauseAlertId
+      );
+
+      expect(root).toBeDefined();
+      expect(root?.relatedAlertIds).toContain(alert.id);
+      expect(alert.priority).not.toBe("page_on_call");
+      expect(alert.correlation.suppressionWindowMinutes).toBe(
+        root?.correlation.suppressionWindowMinutes
+      );
+    }
+  });
 });
 
 describe("demo-data: computeMetrics", () => {

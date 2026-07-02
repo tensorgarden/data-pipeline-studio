@@ -280,6 +280,13 @@ export const observabilityAlerts: ObservabilityAlert[] = [
     businessCriticality: "critical",
     triggeredAt: "2026-06-09T10:12:00Z",
     relatedAlertIds: ["alert-2"],
+    correlation: {
+      rootCauseAlertId: null,
+      suppressedDuplicateCount: 14,
+      suppressionWindowMinutes: 45,
+      clusterReason:
+        "Root contract-drift alert absorbs downstream revenue freshness and board-export checks into one incident instead of creating separate pages.",
+    },
     downstreamPipelineIds: ["p-3"],
     affectedAssets: [
       "Executive revenue rollup dashboard",
@@ -301,6 +308,13 @@ export const observabilityAlerts: ObservabilityAlert[] = [
     businessCriticality: "high",
     triggeredAt: "2026-06-09T10:20:00Z",
     relatedAlertIds: ["alert-1"],
+    correlation: {
+      rootCauseAlertId: "alert-1",
+      suppressedDuplicateCount: 0,
+      suppressionWindowMinutes: 45,
+      clusterReason:
+        "Grouped under the upstream contract-drift page so finance freshness symptoms stay visible without paging a second team.",
+    },
     downstreamPipelineIds: [],
     affectedAssets: [
       "Executive revenue rollup dashboard",
@@ -321,6 +335,13 @@ export const observabilityAlerts: ObservabilityAlert[] = [
     businessCriticality: "medium",
     triggeredAt: "2026-06-09T10:05:00Z",
     relatedAlertIds: [],
+    correlation: {
+      rootCauseAlertId: null,
+      suppressedDuplicateCount: 0,
+      suppressionWindowMinutes: 120,
+      clusterReason:
+        "Watched separately because no critical live dashboard dependency maps through lineage while the archive connector is offline.",
+    },
     downstreamPipelineIds: [],
     affectedAssets: ["Archive backfill workspace"],
     priority: "watch",

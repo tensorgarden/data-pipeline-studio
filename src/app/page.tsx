@@ -538,6 +538,14 @@ function AlertPanel() {
                 pipelines
               </p>
               <p className="mt-1 text-amber-700">{alert.triageRationale}</p>
+              <p className="mt-1 text-slate-500">
+                {alert.correlation.rootCauseAlertId
+                  ? `Grouped under ${alert.correlation.rootCauseAlertId}`
+                  : alert.correlation.suppressedDuplicateCount > 0
+                    ? `${alert.correlation.suppressedDuplicateCount} duplicates suppressed`
+                    : "No duplicate paging suppressed"}{" "}
+                · {alert.correlation.suppressionWindowMinutes}m correlation window
+              </p>
             </div>
           );
         })}

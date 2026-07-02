@@ -31,6 +31,13 @@ export type ObservabilityAlertPriority =
   | "page_on_call";
 export type BusinessCriticality = "low" | "medium" | "high" | "critical";
 
+export interface AlertCorrelationContext {
+  rootCauseAlertId: string | null;
+  suppressedDuplicateCount: number;
+  suppressionWindowMinutes: number;
+  clusterReason: string;
+}
+
 export interface ObservabilityAlert {
   id: string;
   pipelineId: string;
@@ -40,6 +47,7 @@ export interface ObservabilityAlert {
   businessCriticality: BusinessCriticality;
   triggeredAt: string;
   relatedAlertIds: string[];
+  correlation: AlertCorrelationContext;
   downstreamPipelineIds: string[];
   affectedAssets: string[];
   priority: ObservabilityAlertPriority;
