@@ -74,6 +74,10 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+function formatUtcDateTime(iso: string): string {
+  return new Date(iso).toISOString().slice(5, 16).replace("T", " ");
+}
+
 // ── Pipeline Row ───────────────────────────────────────────────────────────
 function PipelineRow({ pipeline }: { pipeline: Pipeline }) {
   const lastRun = pipeline.runs[0];
@@ -536,6 +540,12 @@ function AlertPanel() {
                 {" "}
                 affected assets · {alert.downstreamPipelineIds.length} downstream
                 pipelines
+              </p>
+              <p className="mt-1 text-slate-500">
+                Owner: {alert.response.ownerTeam} · Review due {formatUtcDateTime(alert.response.reviewDueAt)}
+                {alert.response.acknowledgedAt
+                  ? ` · Acked ${formatUtcDateTime(alert.response.acknowledgedAt)}`
+                  : " · Acknowledgement pending"}
               </p>
               <p className="mt-1 text-amber-700">{alert.triageRationale}</p>
               <p className="mt-1 text-slate-500">

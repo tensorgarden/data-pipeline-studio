@@ -308,6 +308,33 @@ describe("demo-data: context-aware alert triage", () => {
     }
   });
 
+  it("should assign alert ownership with time-bound response plans", () => {
+    for (const alert of observabilityAlerts) {
+      const triggeredAt = Date.parse(alert.triggeredAt);
+      const reviewDueAt = Date.parse(alert.response.reviewDueAt);
+
+      expect(alert.response.ownerTeam.trim().length).toBeGreaterThan(6);
+      expect(alert.response.ownerTeam.toLowerCase()).not.toContain("automation");
+      expect(alert.response.escalationPolicy.length).toBeGreaterThan(80);
+      expect(Number.isNaN(reviewDueAt)).toBe(false);
+      expect(reviewDueAt).toBeGreaterThan(triggeredAt);
+
+      if (alert.response.acknowledgedAt) {
+        const acknowledgedAt = Date.parse(alert.response.acknowledgedAt);
+        expect(Number.isNaN(acknowledgedAt)).toBe(false);
+        expect(acknowledgedAt).toBeGreaterThanOrEqual(triggeredAt);
+        expect(acknowledgedAt).toBeLessThanOrEqual(reviewDueAt);
+      }
+
+      if (alert.priority === "page_on_call") {
+        const acknowledgedAt = Date.parse(alert.response.acknowledgedAt ?? "");
+        expect(alert.response.acknowledgedAt).not.toBeNull();
+        expect(acknowledgedAt - triggeredAt).toBeLessThanOrEqual(15 * 60_000);
+        expect(reviewDueAt - triggeredAt).toBeLessThanOrEqual(30 * 60_000);
+      }
+    }
+  });
+
   it("should cluster related alerts without invalid or self-referencing IDs", () => {
     const clusteredAlerts = observabilityAlerts.filter(
       (alert) => alert.relatedAlertIds.length > 0

@@ -279,6 +279,13 @@ export const observabilityAlerts: ObservabilityAlert[] = [
     severity: "critical",
     businessCriticality: "critical",
     triggeredAt: "2026-06-09T10:12:00Z",
+    response: {
+      ownerTeam: "Data Platform On-call",
+      acknowledgedAt: "2026-06-09T10:14:00Z",
+      reviewDueAt: "2026-06-09T10:27:00Z",
+      escalationPolicy:
+        "Primary data platform owner pages immediately; finance reporting stakeholders receive an incident note if replay is not complete inside the review window.",
+    },
     relatedAlertIds: ["alert-2"],
     correlation: {
       rootCauseAlertId: null,
@@ -307,6 +314,13 @@ export const observabilityAlerts: ObservabilityAlert[] = [
     severity: "warning",
     businessCriticality: "high",
     triggeredAt: "2026-06-09T10:20:00Z",
+    response: {
+      ownerTeam: "Analytics Engineering",
+      acknowledgedAt: "2026-06-09T10:29:00Z",
+      reviewDueAt: "2026-06-09T13:00:00Z",
+      escalationPolicy:
+        "Analytics engineer owns the finance-facing stale-data banner and escalates to data platform if the root replay misses the same-day review window.",
+    },
     relatedAlertIds: ["alert-1"],
     correlation: {
       rootCauseAlertId: "alert-1",
@@ -334,6 +348,13 @@ export const observabilityAlerts: ObservabilityAlert[] = [
     severity: "warning",
     businessCriticality: "medium",
     triggeredAt: "2026-06-09T10:05:00Z",
+    response: {
+      ownerTeam: "Data Infrastructure Support",
+      acknowledgedAt: null,
+      reviewDueAt: "2026-06-09T17:00:00Z",
+      escalationPolicy:
+        "Support queue watches MongoDB connector recovery and escalates only if archive freshness remains unknown before the daily backfill window.",
+    },
     relatedAlertIds: [],
     correlation: {
       rootCauseAlertId: null,

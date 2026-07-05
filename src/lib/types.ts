@@ -38,6 +38,13 @@ export interface AlertCorrelationContext {
   clusterReason: string;
 }
 
+export interface AlertResponsePlan {
+  ownerTeam: string;
+  acknowledgedAt: string | null;
+  reviewDueAt: string;
+  escalationPolicy: string;
+}
+
 export interface ObservabilityAlert {
   id: string;
   pipelineId: string;
@@ -46,6 +53,7 @@ export interface ObservabilityAlert {
   severity: ObservabilityAlertSeverity;
   businessCriticality: BusinessCriticality;
   triggeredAt: string;
+  response: AlertResponsePlan;
   relatedAlertIds: string[];
   correlation: AlertCorrelationContext;
   downstreamPipelineIds: string[];
