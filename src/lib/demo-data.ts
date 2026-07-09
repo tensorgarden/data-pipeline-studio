@@ -11,6 +11,7 @@ import {
   RunErrorBreakdown,
   SchemaDriftEvent,
   ObservabilityAlert,
+  PipelineCostSignal,
 } from "./types";
 
 export const dataQualityChecks: DataQualityCheck[] = [
@@ -370,6 +371,57 @@ export const observabilityAlerts: ObservabilityAlert[] = [
       "The archive connector is down, but no critical live dashboard depends on the disabled batch job today, so the alert stays visible without escalating on-call noise.",
     recommendedAction:
       "Open a same-week connector repair ticket, preserve the unknown freshness state, and avoid replaying archive loads until MongoDB emits a trusted watermark.",
+  },
+];
+
+export const pipelineCostSignals: PipelineCostSignal[] = [
+  {
+    id: "cost-1",
+    pipelineId: "p-6",
+    windowStart: "2026-06-09T01:00:00Z",
+    windowEnd: "2026-06-09T07:30:00Z",
+    actualSpendUsd: 1280,
+    budgetedSpendUsd: 900,
+    variancePercent: 42.2,
+    status: "overrun",
+    rootCause:
+      "The overnight full load retried high-volume PostgreSQL partitions after contract-drift validation failed, stretching warehouse slots beyond the reserved batch window.",
+    ownerTeam: "Data Platform FinOps",
+    optimizationAction:
+      "Pause discretionary backfills, right-size the warehouse class for replay only after schema approval, and move repeat retries behind a cost guardrail before tomorrow's load.",
+    nextReviewDueAt: "2026-06-09T12:00:00Z",
+  },
+  {
+    id: "cost-2",
+    pipelineId: "p-3",
+    windowStart: "2026-06-09T09:00:00Z",
+    windowEnd: "2026-06-09T10:30:00Z",
+    actualSpendUsd: 760,
+    budgetedSpendUsd: 700,
+    variancePercent: 8.6,
+    status: "watch",
+    rootCause:
+      "Revenue-aggregate replay planning is adding extra BigQuery scan bytes while the upstream schema repair remains unresolved.",
+    ownerTeam: "Analytics Engineering",
+    optimizationAction:
+      "Keep the finance stale-data banner active, dry-run the replay query plan, and batch non-critical scans until the upstream contract drift is cleared.",
+    nextReviewDueAt: "2026-06-09T13:00:00Z",
+  },
+  {
+    id: "cost-3",
+    pipelineId: "p-2",
+    windowStart: "2026-06-09T10:00:00Z",
+    windowEnd: "2026-06-09T11:00:00Z",
+    actualSpendUsd: 310,
+    budgetedSpendUsd: 350,
+    variancePercent: -11.4,
+    status: "within_budget",
+    rootCause:
+      "Kafka consumer lag stayed low enough that autoscaling avoided an unnecessary streaming cluster expansion during campaign pacing checks.",
+    ownerTeam: "Streaming Platform",
+    optimizationAction:
+      "Keep the current autoscaling floor, preserve the five-minute freshness SLO, and review spend only if lag or volume anomalies return.",
+    nextReviewDueAt: "2026-06-10T10:00:00Z",
   },
 ];
 

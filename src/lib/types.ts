@@ -30,6 +30,7 @@ export type ObservabilityAlertPriority =
   | "same_day_review"
   | "page_on_call";
 export type BusinessCriticality = "low" | "medium" | "high" | "critical";
+export type PipelineCostSignalStatus = "within_budget" | "watch" | "overrun";
 
 export interface AlertCorrelationContext {
   rootCauseAlertId: string | null;
@@ -43,6 +44,21 @@ export interface AlertResponsePlan {
   acknowledgedAt: string | null;
   reviewDueAt: string;
   escalationPolicy: string;
+}
+
+export interface PipelineCostSignal {
+  id: string;
+  pipelineId: string;
+  windowStart: string;
+  windowEnd: string;
+  actualSpendUsd: number;
+  budgetedSpendUsd: number;
+  variancePercent: number;
+  status: PipelineCostSignalStatus;
+  rootCause: string;
+  ownerTeam: string;
+  optimizationAction: string;
+  nextReviewDueAt: string;
 }
 
 export interface ObservabilityAlert {

@@ -7,6 +7,7 @@ import {
   runErrorBreakdowns,
   schemaDriftEvents,
   observabilityAlerts,
+  pipelineCostSignals,
   computeMetrics,
 } from "@/lib/demo-data";
 
@@ -412,6 +413,84 @@ describe("demo-data: context-aware alert triage", () => {
       expect(alert.correlation.suppressionWindowMinutes).toBe(
         root?.correlation.suppressionWindowMinutes
       );
+    }
+  });
+});
+
+describe("demo-data: pipeline cost observability", () => {
+  const pipelineIds = new Set(pipelines.map((p) => p.id));
+
+  it("should tie cost signals to valid pipeline windows and owners", () => {
+    const signalIds = new Set(pipelineCostSignals.map((signal) => signal.id));
+
+    expect(pipelineCostSignals.length).toBeGreaterThanOrEqual(3);
+    expect(signalIds.size).toBe(pipelineCostSignals.length);
+
+    for (const signal of pipelineCostSignals) {
+      const windowStart = Date.parse(signal.windowStart);
+      const windowEnd = Date.parse(signal.windowEnd);
+      const nextReviewDueAt = Date.parse(signal.nextReviewDueAt);
+      const expectedVariance =
+        Math.round(
+          ((signal.actualSpendUsd - signal.budgetedSpendUsd) /
+            signal.budgetedSpendUsd) *
+            1000
+        ) / 10;
+
+      expect(pipelineIds.has(signal.pipelineId)).toBe(true);
+      expect(signal.actualSpendUsd).toBeGreaterThanOrEqual(0);
+      expect(signal.budgetedSpendUsd).toBeGreaterThan(0);
+      expect(signal.variancePercent).toBeCloseTo(expectedVariance, 1);
+      expect(Number.isNaN(windowStart)).toBe(false);
+      expect(Number.isNaN(windowEnd)).toBe(false);
+      expect(Number.isNaN(nextReviewDueAt)).toBe(false);
+      expect(windowEnd).toBeGreaterThan(windowStart);
+      expect(nextReviewDueAt).toBeGreaterThan(windowEnd);
+      expect(signal.ownerTeam.trim().length).toBeGreaterThan(6);
+      expect(signal.optimizationAction.length).toBeGreaterThan(80);
+    }
+  });
+
+  it("should escalate cost overruns with root-cause and review owners", () => {
+    const overruns = pipelineCostSignals.filter(
+      (signal) => signal.status === "overrun"
+    );
+
+    expect(overruns.length).toBeGreaterThanOrEqual(1);
+
+    for (const signal of overruns) {
+      const windowEnd = Date.parse(signal.windowEnd);
+      const nextReviewDueAt = Date.parse(signal.nextReviewDueAt);
+
+      expect(signal.actualSpendUsd).toBeGreaterThan(signal.budgetedSpendUsd);
+      expect(signal.variancePercent).toBeGreaterThan(0);
+      expect(signal.rootCause.length).toBeGreaterThan(80);
+      expect(signal.ownerTeam.toLowerCase()).not.toContain("automation");
+      expect(nextReviewDueAt - windowEnd).toBeLessThanOrEqual(24 * 60 * 60_000);
+    }
+  });
+
+  it("should keep budget-watch signals visible before they become severe", () => {
+    const watchSignals = pipelineCostSignals.filter(
+      (signal) => signal.status === "watch"
+    );
+    const withinBudgetSignals = pipelineCostSignals.filter(
+      (signal) => signal.status === "within_budget"
+    );
+
+    expect(watchSignals.length).toBeGreaterThanOrEqual(1);
+    expect(withinBudgetSignals.length).toBeGreaterThanOrEqual(1);
+
+    for (const signal of watchSignals) {
+      expect(signal.actualSpendUsd).toBeGreaterThan(signal.budgetedSpendUsd);
+      expect(signal.variancePercent).toBeGreaterThan(0);
+      expect(signal.variancePercent).toBeLessThan(15);
+      expect(signal.rootCause.length).toBeGreaterThan(60);
+    }
+
+    for (const signal of withinBudgetSignals) {
+      expect(signal.actualSpendUsd).toBeLessThanOrEqual(signal.budgetedSpendUsd);
+      expect(signal.variancePercent).toBeLessThanOrEqual(0);
     }
   });
 });

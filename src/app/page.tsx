@@ -9,6 +9,7 @@ import {
   etlJobs,
   schemaDriftEvents,
   observabilityAlerts,
+  pipelineCostSignals,
   computeMetrics,
 } from "@/lib/demo-data";
 import {
@@ -62,6 +63,10 @@ function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
+}
+
+function formatCurrency(usd: number): string {
+  return `$${Math.round(usd).toLocaleString()}`;
 }
 
 function timeAgo(iso: string): string {
@@ -479,6 +484,9 @@ function AlertPanel() {
   const contextAlerts = [...observabilityAlerts].sort(
     (a, b) => priorityRank[a.priority] - priorityRank[b.priority]
   );
+  const costSignals = pipelineCostSignals
+    .filter((signal) => signal.status !== "within_budget")
+    .sort((a, b) => b.variancePercent - a.variancePercent);
   const failedRuns = pipelineRuns.filter((r) => r.status === "failed");
   const failedPipelines = pipelines.filter((p) => p.status === "failed");
   const degradedSources = sourceConnectors.filter(
@@ -487,6 +495,7 @@ function AlertPanel() {
 
   const hasAlerts =
     contextAlerts.length > 0 ||
+    costSignals.length > 0 ||
     failedRuns.length > 0 ||
     failedPipelines.length > 0 ||
     degradedSources.length > 0;
@@ -556,6 +565,32 @@ function AlertPanel() {
                     : "No duplicate paging suppressed"}{" "}
                 · {alert.correlation.suppressionWindowMinutes}m correlation window
               </p>
+            </div>
+          );
+        })}
+        {costSignals.map((signal) => {
+          const pipe = pipelines.find((p) => p.id === signal.pipelineId);
+          const variant = signal.status === "overrun" ? "danger" : "warning";
+
+          return (
+            <div key={signal.id} className="rounded bg-white p-3">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <StatusDot status={signal.status === "overrun" ? "failed" : "warn"} />
+                  <span className="font-medium text-amber-900">
+                    Cost watch: {pipe?.name ?? signal.pipelineId}
+                  </span>
+                </div>
+                <Badge variant={variant}>{signal.status.replaceAll("_", " ")}</Badge>
+              </div>
+              <p className="text-slate-600">
+                {formatCurrency(signal.actualSpendUsd)} actual / {formatCurrency(signal.budgetedSpendUsd)} budget · {signal.variancePercent}% variance
+              </p>
+              <p className="mt-1 text-slate-500">
+                Owner: {signal.ownerTeam} · Review due {formatUtcDateTime(signal.nextReviewDueAt)}
+              </p>
+              <p className="mt-1 text-amber-700">{signal.rootCause}</p>
+              <p className="mt-1 text-slate-500">{signal.optimizationAction}</p>
             </div>
           );
         })}
