@@ -8,6 +8,7 @@ import {
   schemaDriftEvents,
   observabilityAlerts,
   pipelineCostSignals,
+  pipelineRecoveryValidations,
   computeMetrics,
 } from "@/lib/demo-data";
 
@@ -413,6 +414,82 @@ describe("demo-data: context-aware alert triage", () => {
       expect(alert.correlation.suppressionWindowMinutes).toBe(
         root?.correlation.suppressionWindowMinutes
       );
+    }
+  });
+});
+
+describe("demo-data: incident recovery validation", () => {
+  const pipelineIds = new Set(pipelines.map((pipeline) => pipeline.id));
+  const runById = new Map(pipelineRuns.map((run) => [run.id, run]));
+  const alertIds = new Set(observabilityAlerts.map((alert) => alert.id));
+
+  it("should tie replay validation gates to valid operational context", () => {
+    const validationIds = new Set(
+      pipelineRecoveryValidations.map((validation) => validation.id)
+    );
+
+    expect(pipelineRecoveryValidations.length).toBeGreaterThanOrEqual(3);
+    expect(validationIds.size).toBe(pipelineRecoveryValidations.length);
+
+    for (const validation of pipelineRecoveryValidations) {
+      expect(pipelineIds.has(validation.pipelineId)).toBe(true);
+      expect(validation.qualityChecksRequired).toBeGreaterThan(0);
+      expect(validation.qualityChecksPassed).toBeGreaterThanOrEqual(0);
+      expect(validation.qualityChecksPassed).toBeLessThanOrEqual(
+        validation.qualityChecksRequired
+      );
+      expect(Date.parse(validation.replayWindowEnd)).toBeGreaterThan(
+        Date.parse(validation.replayWindowStart)
+      );
+      expect(Date.parse(validation.publishDecisionDueAt)).toBeGreaterThan(
+        Date.parse(validation.replayWindowEnd)
+      );
+      expect(validation.ownerTeam.trim().length).toBeGreaterThan(6);
+
+      if (validation.incidentAlertId) {
+        expect(alertIds.has(validation.incidentAlertId)).toBe(true);
+      }
+      if (validation.replayRunId) {
+        expect(runById.has(validation.replayRunId)).toBe(true);
+      }
+    }
+  });
+
+  it("should keep publication blocked until replay evidence is complete", () => {
+    for (const validation of pipelineRecoveryValidations) {
+      if (validation.status === "ready_to_publish") {
+        const replayRun = runById.get(validation.replayRunId ?? "");
+        expect(replayRun?.status).toBe("success");
+        expect(validation.qualityChecksPassed).toBe(
+          validation.qualityChecksRequired
+        );
+        expect(validation.downstreamWatermarkVerified).toBe(true);
+        expect(validation.rowCountVariancePercent).not.toBeNull();
+        expect(validation.blockingReason).toBeNull();
+      } else {
+        expect(validation.blockingReason?.length).toBeGreaterThan(80);
+        expect(
+          validation.qualityChecksPassed < validation.qualityChecksRequired ||
+            !validation.downstreamWatermarkVerified ||
+            validation.replayRunId === null
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("should cover every actionable incident with a recovery validation gate", () => {
+    const coveredAlertIds = new Set(
+      pipelineRecoveryValidations
+        .map((validation) => validation.incidentAlertId)
+        .filter((alertId): alertId is string => alertId !== null)
+    );
+    const actionableAlerts = observabilityAlerts.filter(
+      (alert) => alert.priority !== "watch"
+    );
+
+    expect(actionableAlerts.length).toBeGreaterThanOrEqual(1);
+    for (const alert of actionableAlerts) {
+      expect(coveredAlertIds.has(alert.id)).toBe(true);
     }
   });
 });

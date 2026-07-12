@@ -31,6 +31,10 @@ export type ObservabilityAlertPriority =
   | "page_on_call";
 export type BusinessCriticality = "low" | "medium" | "high" | "critical";
 export type PipelineCostSignalStatus = "within_budget" | "watch" | "overrun";
+export type RecoveryValidationStatus =
+  | "blocked"
+  | "validating"
+  | "ready_to_publish";
 
 export interface AlertCorrelationContext {
   rootCauseAlertId: string | null;
@@ -59,6 +63,23 @@ export interface PipelineCostSignal {
   ownerTeam: string;
   optimizationAction: string;
   nextReviewDueAt: string;
+}
+
+export interface PipelineRecoveryValidation {
+  id: string;
+  pipelineId: string;
+  incidentAlertId: string | null;
+  replayWindowStart: string;
+  replayWindowEnd: string;
+  replayRunId: string | null;
+  rowCountVariancePercent: number | null;
+  qualityChecksPassed: number;
+  qualityChecksRequired: number;
+  downstreamWatermarkVerified: boolean;
+  status: RecoveryValidationStatus;
+  ownerTeam: string;
+  publishDecisionDueAt: string;
+  blockingReason: string | null;
 }
 
 export interface ObservabilityAlert {

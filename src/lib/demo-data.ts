@@ -12,6 +12,7 @@ import {
   SchemaDriftEvent,
   ObservabilityAlert,
   PipelineCostSignal,
+  PipelineRecoveryValidation,
 } from "./types";
 
 export const dataQualityChecks: DataQualityCheck[] = [
@@ -371,6 +372,59 @@ export const observabilityAlerts: ObservabilityAlert[] = [
       "The archive connector is down, but no critical live dashboard depends on the disabled batch job today, so the alert stays visible without escalating on-call noise.",
     recommendedAction:
       "Open a same-week connector repair ticket, preserve the unknown freshness state, and avoid replaying archive loads until MongoDB emits a trusted watermark.",
+  },
+];
+
+export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
+  {
+    id: "recovery-1",
+    pipelineId: "p-6",
+    incidentAlertId: "alert-1",
+    replayWindowStart: "2026-06-09T01:00:00Z",
+    replayWindowEnd: "2026-06-09T07:30:00Z",
+    replayRunId: null,
+    rowCountVariancePercent: null,
+    qualityChecksPassed: 0,
+    qualityChecksRequired: 3,
+    downstreamWatermarkVerified: false,
+    status: "blocked",
+    ownerTeam: "Data Platform On-call",
+    publishDecisionDueAt: "2026-06-09T12:00:00Z",
+    blockingReason:
+      "Replay remains blocked until the account_tier contract change is approved and the repaired overnight load can produce a trusted S3 watermark.",
+  },
+  {
+    id: "recovery-2",
+    pipelineId: "p-3",
+    incidentAlertId: "alert-2",
+    replayWindowStart: "2026-06-09T02:00:00Z",
+    replayWindowEnd: "2026-06-09T10:16:48Z",
+    replayRunId: "run-6",
+    rowCountVariancePercent: 0.8,
+    qualityChecksPassed: 2,
+    qualityChecksRequired: 3,
+    downstreamWatermarkVerified: false,
+    status: "validating",
+    ownerTeam: "Analytics Engineering",
+    publishDecisionDueAt: "2026-06-09T13:00:00Z",
+    blockingReason:
+      "The row-count check is within tolerance, but finance publishing stays blocked until the refreshed aggregate watermark is verified downstream.",
+  },
+  {
+    id: "recovery-3",
+    pipelineId: "p-2",
+    incidentAlertId: null,
+    replayWindowStart: "2026-06-09T10:30:00Z",
+    replayWindowEnd: "2026-06-09T10:31:12Z",
+    replayRunId: "run-4",
+    rowCountVariancePercent: 0.2,
+    qualityChecksPassed: 3,
+    qualityChecksRequired: 3,
+    downstreamWatermarkVerified: true,
+    status: "ready_to_publish",
+    ownerTeam: "Streaming Platform",
+    publishDecisionDueAt: "2026-06-09T11:15:00Z",
+    blockingReason: null,
   },
 ];
 

@@ -10,6 +10,7 @@ import {
   schemaDriftEvents,
   observabilityAlerts,
   pipelineCostSignals,
+  pipelineRecoveryValidations,
   computeMetrics,
 } from "@/lib/demo-data";
 import {
@@ -487,6 +488,9 @@ function AlertPanel() {
   const costSignals = pipelineCostSignals
     .filter((signal) => signal.status !== "within_budget")
     .sort((a, b) => b.variancePercent - a.variancePercent);
+  const recoveryGates = pipelineRecoveryValidations.filter(
+    (validation) => validation.status !== "ready_to_publish"
+  );
   const failedRuns = pipelineRuns.filter((r) => r.status === "failed");
   const failedPipelines = pipelines.filter((p) => p.status === "failed");
   const degradedSources = sourceConnectors.filter(
@@ -496,6 +500,7 @@ function AlertPanel() {
   const hasAlerts =
     contextAlerts.length > 0 ||
     costSignals.length > 0 ||
+    recoveryGates.length > 0 ||
     failedRuns.length > 0 ||
     failedPipelines.length > 0 ||
     degradedSources.length > 0;
@@ -565,6 +570,42 @@ function AlertPanel() {
                     : "No duplicate paging suppressed"}{" "}
                 · {alert.correlation.suppressionWindowMinutes}m correlation window
               </p>
+            </div>
+          );
+        })}
+        {recoveryGates.map((validation) => {
+          const pipe = pipelines.find((p) => p.id === validation.pipelineId);
+          const checksComplete = `${validation.qualityChecksPassed}/${validation.qualityChecksRequired}`;
+
+          return (
+            <div key={validation.id} className="rounded bg-white p-3">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <StatusDot
+                    status={validation.status === "blocked" ? "failed" : "running"}
+                  />
+                  <span className="font-medium text-amber-900">
+                    Recovery gate: {pipe?.name ?? validation.pipelineId}
+                  </span>
+                </div>
+                <Badge
+                  variant={validation.status === "blocked" ? "danger" : "info"}
+                >
+                  {validation.status.replaceAll("_", " ")}
+                </Badge>
+              </div>
+              <p className="text-slate-600">
+                {checksComplete} quality checks · watermark {validation.downstreamWatermarkVerified ? "verified" : "pending"}
+                {validation.rowCountVariancePercent === null
+                  ? " · row variance pending"
+                  : ` · ${validation.rowCountVariancePercent}% row variance`}
+              </p>
+              <p className="mt-1 text-slate-500">
+                Owner: {validation.ownerTeam} · Publish decision due {formatUtcDateTime(validation.publishDecisionDueAt)}
+              </p>
+              {validation.blockingReason && (
+                <p className="mt-1 text-amber-700">{validation.blockingReason}</p>
+              )}
             </div>
           );
         })}
