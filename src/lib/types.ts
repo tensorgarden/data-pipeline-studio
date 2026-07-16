@@ -30,6 +30,12 @@ export type ObservabilityAlertPriority =
   | "same_day_review"
   | "page_on_call";
 export type BusinessCriticality = "low" | "medium" | "high" | "critical";
+export type AffectedAssetType =
+  | "dashboard"
+  | "feature_store"
+  | "report"
+  | "notebook"
+  | "workspace";
 export type PipelineCostSignalStatus = "within_budget" | "watch" | "overrun";
 export type RecoveryValidationStatus =
   | "blocked"
@@ -48,6 +54,13 @@ export interface AlertResponsePlan {
   acknowledgedAt: string | null;
   reviewDueAt: string;
   escalationPolicy: string;
+}
+
+export interface AffectedAssetImpact {
+  name: string;
+  assetType: AffectedAssetType;
+  ownerTeam: string;
+  impactSummary: string;
 }
 
 export interface PipelineCostSignal {
@@ -94,7 +107,7 @@ export interface ObservabilityAlert {
   relatedAlertIds: string[];
   correlation: AlertCorrelationContext;
   downstreamPipelineIds: string[];
-  affectedAssets: string[];
+  affectedAssets: AffectedAssetImpact[];
   priority: ObservabilityAlertPriority;
   triageRationale: string;
   recommendedAction: string;

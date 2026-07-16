@@ -298,9 +298,27 @@ export const observabilityAlerts: ObservabilityAlert[] = [
     },
     downstreamPipelineIds: ["p-3"],
     affectedAssets: [
-      "Executive revenue rollup dashboard",
-      "Revenue forecast feature store",
-      "Board metrics export",
+      {
+        name: "Executive revenue rollup dashboard",
+        assetType: "dashboard",
+        ownerTeam: "Finance Analytics",
+        impactSummary:
+          "Executive revenue decisions remain on stale aggregates until the replay watermark is verified.",
+      },
+      {
+        name: "Revenue forecast feature store",
+        assetType: "feature_store",
+        ownerTeam: "ML Platform",
+        impactSummary:
+          "Forecast features can inherit invalid account tiers while the upstream contract change is unresolved.",
+      },
+      {
+        name: "Board metrics export",
+        assetType: "report",
+        ownerTeam: "Executive Data Products",
+        impactSummary:
+          "The next board export must remain blocked rather than publishing revenue metrics from the broken load.",
+      },
     ],
     priority: "page_on_call",
     triageRationale:
@@ -333,8 +351,20 @@ export const observabilityAlerts: ObservabilityAlert[] = [
     },
     downstreamPipelineIds: [],
     affectedAssets: [
-      "Executive revenue rollup dashboard",
-      "Financial anomaly notebook",
+      {
+        name: "Executive revenue rollup dashboard",
+        assetType: "dashboard",
+        ownerTeam: "Finance Analytics",
+        impactSummary:
+          "Finance leaders see a stale-data warning while the six-hour freshness breach remains unresolved.",
+      },
+      {
+        name: "Financial anomaly notebook",
+        assetType: "notebook",
+        ownerTeam: "Financial Data Science",
+        impactSummary:
+          "Analysts must defer anomaly conclusions until the aggregate watermark confirms refreshed inputs.",
+      },
     ],
     priority: "same_day_review",
     triageRationale:
@@ -366,7 +396,15 @@ export const observabilityAlerts: ObservabilityAlert[] = [
         "Watched separately because no critical live dashboard dependency maps through lineage while the archive connector is offline.",
     },
     downstreamPipelineIds: [],
-    affectedAssets: ["Archive backfill workspace"],
+    affectedAssets: [
+      {
+        name: "Archive backfill workspace",
+        assetType: "workspace",
+        ownerTeam: "Data Lifecycle Operations",
+        impactSummary:
+          "Archive operators cannot schedule a trustworthy backfill until the connector emits a verified watermark.",
+      },
+    ],
     priority: "watch",
     triageRationale:
       "The archive connector is down, but no critical live dashboard depends on the disabled batch job today, so the alert stays visible without escalating on-call noise.",

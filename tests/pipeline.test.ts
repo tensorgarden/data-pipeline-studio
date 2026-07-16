@@ -310,6 +310,38 @@ describe("demo-data: context-aware alert triage", () => {
     }
   });
 
+  it("should route affected assets to named downstream owners", () => {
+    for (const alert of observabilityAlerts) {
+      const assetNames = new Set(
+        alert.affectedAssets.map((asset) => asset.name)
+      );
+
+      expect(assetNames.size).toBe(alert.affectedAssets.length);
+      for (const asset of alert.affectedAssets) {
+        expect(asset.name.trim().length).toBeGreaterThan(10);
+        expect(asset.ownerTeam.trim().length).toBeGreaterThan(6);
+        expect(asset.impactSummary.length).toBeGreaterThan(80);
+      }
+    }
+  });
+
+  it("should give paging incidents a multi-team blast radius", () => {
+    const pagingAlerts = observabilityAlerts.filter(
+      (alert) => alert.priority === "page_on_call"
+    );
+
+    expect(pagingAlerts.length).toBeGreaterThanOrEqual(1);
+    for (const alert of pagingAlerts) {
+      const affectedOwnerTeams = new Set(
+        alert.affectedAssets.map((asset) => asset.ownerTeam)
+      );
+      expect(affectedOwnerTeams.size).toBeGreaterThanOrEqual(2);
+      expect(
+        alert.affectedAssets.some((asset) => asset.assetType === "dashboard")
+      ).toBe(true);
+    }
+  });
+
   it("should assign alert ownership with time-bound response plans", () => {
     for (const alert of observabilityAlerts) {
       const triggeredAt = Date.parse(alert.triggeredAt);

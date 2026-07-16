@@ -529,6 +529,9 @@ function AlertPanel() {
       <div className="space-y-2 text-xs">
         {contextAlerts.map((alert) => {
           const pipe = pipelines.find((p) => p.id === alert.pipelineId);
+          const impactedOwnerTeams = Array.from(
+            new Set(alert.affectedAssets.map((asset) => asset.ownerTeam))
+          );
           const variant =
             alert.severity === "critical"
               ? "danger"
@@ -560,6 +563,9 @@ function AlertPanel() {
                 {alert.response.acknowledgedAt
                   ? ` · Acked ${formatUtcDateTime(alert.response.acknowledgedAt)}`
                   : " · Acknowledgement pending"}
+              </p>
+              <p className="mt-1 text-slate-500">
+                Impacted owners: {impactedOwnerTeams.join(", ")}
               </p>
               <p className="mt-1 text-amber-700">{alert.triageRationale}</p>
               <p className="mt-1 text-slate-500">
