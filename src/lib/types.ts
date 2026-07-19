@@ -41,6 +41,7 @@ export type RecoveryValidationStatus =
   | "blocked"
   | "validating"
   | "ready_to_publish";
+export type ReplayWriteMode = "append" | "upsert" | "partition_overwrite";
 
 export interface AlertCorrelationContext {
   rootCauseAlertId: string | null;
@@ -89,6 +90,11 @@ export interface PipelineRecoveryValidation {
   qualityChecksPassed: number;
   qualityChecksRequired: number;
   downstreamWatermarkVerified: boolean;
+  replayWriteMode: ReplayWriteMode;
+  deduplicationKey: string | null;
+  idempotencyVerified: boolean;
+  duplicateRowsDetected: number | null;
+  idempotencyEvidence: string;
   status: RecoveryValidationStatus;
   ownerTeam: string;
   publishDecisionDueAt: string;

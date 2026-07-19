@@ -606,6 +606,15 @@ function AlertPanel() {
                   ? " · row variance pending"
                   : ` · ${validation.rowCountVariancePercent}% row variance`}
               </p>
+              <p className="mt-1 text-slate-600">
+                Replay safety: {validation.replayWriteMode.replaceAll("_", " ")} · idempotency {validation.idempotencyVerified ? "verified" : "not verified"}
+                {validation.duplicateRowsDetected === null
+                  ? " · duplicate scan pending"
+                  : ` · ${validation.duplicateRowsDetected} duplicate rows`}
+              </p>
+              <p className="mt-1 text-slate-500">
+                Key: {validation.deduplicationKey ?? "none approved"} · {validation.idempotencyEvidence}
+              </p>
               <p className="mt-1 text-slate-500">
                 Owner: {validation.ownerTeam} · Publish decision due {formatUtcDateTime(validation.publishDecisionDueAt)}
               </p>

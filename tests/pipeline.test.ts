@@ -487,6 +487,42 @@ describe("demo-data: incident recovery validation", () => {
     }
   });
 
+  it("should document replay write semantics and duplicate evidence", () => {
+    const writeModes = new Set(
+      pipelineRecoveryValidations.map((validation) => validation.replayWriteMode)
+    );
+
+    expect(writeModes.has("append")).toBe(true);
+    expect(writeModes.has("upsert")).toBe(true);
+    expect(writeModes.has("partition_overwrite")).toBe(true);
+
+    for (const validation of pipelineRecoveryValidations) {
+      expect(validation.idempotencyEvidence.length).toBeGreaterThan(80);
+      if (validation.duplicateRowsDetected !== null) {
+        expect(validation.duplicateRowsDetected).toBeGreaterThanOrEqual(0);
+      }
+
+      if (validation.idempotencyVerified) {
+        expect(validation.deduplicationKey?.trim().length).toBeGreaterThan(3);
+        expect(validation.duplicateRowsDetected).toBe(0);
+      }
+    }
+  });
+
+  it("should keep non-idempotent replay attempts out of ready-to-publish", () => {
+    const unsafeReplays = pipelineRecoveryValidations.filter(
+      (validation) =>
+        !validation.idempotencyVerified ||
+        validation.duplicateRowsDetected === null ||
+        validation.duplicateRowsDetected > 0
+    );
+
+    expect(unsafeReplays.length).toBeGreaterThanOrEqual(1);
+    for (const validation of unsafeReplays) {
+      expect(validation.status).not.toBe("ready_to_publish");
+    }
+  });
+
   it("should keep publication blocked until replay evidence is complete", () => {
     for (const validation of pipelineRecoveryValidations) {
       if (validation.status === "ready_to_publish") {
@@ -497,13 +533,18 @@ describe("demo-data: incident recovery validation", () => {
         );
         expect(validation.downstreamWatermarkVerified).toBe(true);
         expect(validation.rowCountVariancePercent).not.toBeNull();
+        expect(validation.idempotencyVerified).toBe(true);
+        expect(validation.duplicateRowsDetected).toBe(0);
+        expect(validation.deduplicationKey).not.toBeNull();
         expect(validation.blockingReason).toBeNull();
       } else {
         expect(validation.blockingReason?.length).toBeGreaterThan(80);
         expect(
           validation.qualityChecksPassed < validation.qualityChecksRequired ||
             !validation.downstreamWatermarkVerified ||
-            validation.replayRunId === null
+            validation.replayRunId === null ||
+            !validation.idempotencyVerified ||
+            validation.duplicateRowsDetected !== 0
         ).toBe(true);
       }
     }
