@@ -612,6 +612,15 @@ function AlertPanel() {
                   ? " · duplicate scan pending"
                   : ` · ${validation.duplicateRowsDetected} duplicate rows`}
               </p>
+              <p className="mt-1 text-slate-600">
+                Event-time completeness: {validation.allowedLatenessMinutes}m allowance · watermark {validation.eventTimeWatermarkVerified ? "verified" : "pending"}
+                {validation.lateRecordsDetected === null
+                  ? " · late-arrival scan pending"
+                  : ` · ${validation.lateRecordsDetected} late records`}
+              </p>
+              <p className="mt-1 text-slate-500">
+                {validation.lateArrivalEvidence}
+              </p>
               <p className="mt-1 text-slate-500">
                 Key: {validation.deduplicationKey ?? "none approved"} · {validation.idempotencyEvidence}
               </p>

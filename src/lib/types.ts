@@ -90,6 +90,10 @@ export interface PipelineRecoveryValidation {
   qualityChecksPassed: number;
   qualityChecksRequired: number;
   downstreamWatermarkVerified: boolean;
+  allowedLatenessMinutes: number;
+  lateRecordsDetected: number | null;
+  eventTimeWatermarkVerified: boolean;
+  lateArrivalEvidence: string;
   replayWriteMode: ReplayWriteMode;
   deduplicationKey: string | null;
   idempotencyVerified: boolean;

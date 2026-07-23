@@ -509,6 +509,34 @@ describe("demo-data: incident recovery validation", () => {
     }
   });
 
+  it("should record bounded late-arrival evidence for every replay", () => {
+    for (const validation of pipelineRecoveryValidations) {
+      expect(validation.allowedLatenessMinutes).toBeGreaterThan(0);
+      expect(validation.lateArrivalEvidence.length).toBeGreaterThan(80);
+
+      if (validation.lateRecordsDetected !== null) {
+        expect(validation.lateRecordsDetected).toBeGreaterThanOrEqual(0);
+      }
+      if (validation.eventTimeWatermarkVerified) {
+        expect(validation.lateRecordsDetected).not.toBeNull();
+      }
+    }
+  });
+
+  it("should keep unresolved late arrivals out of ready-to-publish", () => {
+    const incompleteWindows = pipelineRecoveryValidations.filter(
+      (validation) =>
+        !validation.eventTimeWatermarkVerified ||
+        validation.lateRecordsDetected === null ||
+        validation.lateRecordsDetected > 0
+    );
+
+    expect(incompleteWindows.length).toBeGreaterThanOrEqual(1);
+    for (const validation of incompleteWindows) {
+      expect(validation.status).not.toBe("ready_to_publish");
+    }
+  });
+
   it("should keep non-idempotent replay attempts out of ready-to-publish", () => {
     const unsafeReplays = pipelineRecoveryValidations.filter(
       (validation) =>
@@ -532,6 +560,8 @@ describe("demo-data: incident recovery validation", () => {
           validation.qualityChecksRequired
         );
         expect(validation.downstreamWatermarkVerified).toBe(true);
+        expect(validation.eventTimeWatermarkVerified).toBe(true);
+        expect(validation.lateRecordsDetected).toBe(0);
         expect(validation.rowCountVariancePercent).not.toBeNull();
         expect(validation.idempotencyVerified).toBe(true);
         expect(validation.duplicateRowsDetected).toBe(0);
@@ -542,6 +572,8 @@ describe("demo-data: incident recovery validation", () => {
         expect(
           validation.qualityChecksPassed < validation.qualityChecksRequired ||
             !validation.downstreamWatermarkVerified ||
+            !validation.eventTimeWatermarkVerified ||
+            validation.lateRecordsDetected !== 0 ||
             validation.replayRunId === null ||
             !validation.idempotencyVerified ||
             validation.duplicateRowsDetected !== 0
