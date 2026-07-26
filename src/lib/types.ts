@@ -42,6 +42,7 @@ export type RecoveryValidationStatus =
   | "validating"
   | "ready_to_publish";
 export type ReplayWriteMode = "append" | "upsert" | "partition_overwrite";
+export type ContentReconciliationStatus = "pending" | "mismatch" | "matched";
 
 export interface AlertCorrelationContext {
   rootCauseAlertId: string | null;
@@ -87,6 +88,10 @@ export interface PipelineRecoveryValidation {
   replayWindowEnd: string;
   replayRunId: string | null;
   rowCountVariancePercent: number | null;
+  contentReconciliationStatus: ContentReconciliationStatus;
+  sourceChecksum: string | null;
+  targetChecksum: string | null;
+  contentReconciliationEvidence: string;
   qualityChecksPassed: number;
   qualityChecksRequired: number;
   downstreamWatermarkVerified: boolean;

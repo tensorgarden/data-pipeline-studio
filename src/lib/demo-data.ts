@@ -422,6 +422,11 @@ export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
     replayWindowEnd: "2026-06-09T07:30:00Z",
     replayRunId: null,
     rowCountVariancePercent: null,
+    contentReconciliationStatus: "pending",
+    sourceChecksum: null,
+    targetChecksum: null,
+    contentReconciliationEvidence:
+      "Content-level reconciliation is pending because the source contract repair must finish before stable source and target checksums can be compared.",
     qualityChecksPassed: 0,
     qualityChecksRequired: 3,
     downstreamWatermarkVerified: false,
@@ -450,6 +455,11 @@ export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
     replayWindowEnd: "2026-06-09T10:16:48Z",
     replayRunId: "run-6",
     rowCountVariancePercent: 0.8,
+    contentReconciliationStatus: "mismatch",
+    sourceChecksum: "crc32:7f31c9a2",
+    targetChecksum: "crc32:64d20e11",
+    contentReconciliationEvidence:
+      "Partition-level source and target checksums disagree even though row-count variance is acceptable, proving the replay changed record content.",
     qualityChecksPassed: 3,
     qualityChecksRequired: 3,
     downstreamWatermarkVerified: true,
@@ -468,7 +478,7 @@ export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
     ownerTeam: "Analytics Engineering",
     publishDecisionDueAt: "2026-06-09T13:00:00Z",
     blockingReason:
-      "Replay checks and the downstream watermark are complete, but 27 duplicate business keys keep the finance aggregate in validation.",
+      "Replay checks and the downstream watermark are complete, but the content checksum mismatch and 27 duplicate business keys keep the finance aggregate in validation.",
   },
   {
     id: "recovery-3",
@@ -478,6 +488,11 @@ export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
     replayWindowEnd: "2026-06-09T10:31:12Z",
     replayRunId: "run-4",
     rowCountVariancePercent: 0.2,
+    contentReconciliationStatus: "matched",
+    sourceChecksum: "crc32:19b77de4",
+    targetChecksum: "crc32:19b77de4",
+    contentReconciliationEvidence:
+      "The replayed clickstream partition matches the captured source control checksum, confirming content integrity beyond the row-count comparison.",
     qualityChecksPassed: 3,
     qualityChecksRequired: 3,
     downstreamWatermarkVerified: true,

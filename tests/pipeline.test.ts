@@ -487,6 +487,48 @@ describe("demo-data: incident recovery validation", () => {
     }
   });
 
+  it("should reconcile replay content beyond row-count checks", () => {
+    const statuses = new Set(
+      pipelineRecoveryValidations.map(
+        (validation) => validation.contentReconciliationStatus
+      )
+    );
+
+    expect(statuses.has("pending")).toBe(true);
+    expect(statuses.has("mismatch")).toBe(true);
+    expect(statuses.has("matched")).toBe(true);
+
+    for (const validation of pipelineRecoveryValidations) {
+      expect(validation.contentReconciliationEvidence.length).toBeGreaterThan(80);
+
+      if (validation.contentReconciliationStatus === "pending") {
+        expect(
+          validation.sourceChecksum === null || validation.targetChecksum === null
+        ).toBe(true);
+      } else {
+        expect(validation.sourceChecksum?.length).toBeGreaterThan(10);
+        expect(validation.targetChecksum?.length).toBeGreaterThan(10);
+
+        if (validation.contentReconciliationStatus === "matched") {
+          expect(validation.sourceChecksum).toBe(validation.targetChecksum);
+        } else {
+          expect(validation.sourceChecksum).not.toBe(validation.targetChecksum);
+        }
+      }
+    }
+  });
+
+  it("should keep content mismatches out of ready-to-publish", () => {
+    const unreconciled = pipelineRecoveryValidations.filter(
+      (validation) => validation.contentReconciliationStatus !== "matched"
+    );
+
+    expect(unreconciled.length).toBeGreaterThanOrEqual(1);
+    for (const validation of unreconciled) {
+      expect(validation.status).not.toBe("ready_to_publish");
+    }
+  });
+
   it("should document replay write semantics and duplicate evidence", () => {
     const writeModes = new Set(
       pipelineRecoveryValidations.map((validation) => validation.replayWriteMode)
@@ -563,6 +605,8 @@ describe("demo-data: incident recovery validation", () => {
         expect(validation.eventTimeWatermarkVerified).toBe(true);
         expect(validation.lateRecordsDetected).toBe(0);
         expect(validation.rowCountVariancePercent).not.toBeNull();
+        expect(validation.contentReconciliationStatus).toBe("matched");
+        expect(validation.sourceChecksum).toBe(validation.targetChecksum);
         expect(validation.idempotencyVerified).toBe(true);
         expect(validation.duplicateRowsDetected).toBe(0);
         expect(validation.deduplicationKey).not.toBeNull();
@@ -575,6 +619,7 @@ describe("demo-data: incident recovery validation", () => {
             !validation.eventTimeWatermarkVerified ||
             validation.lateRecordsDetected !== 0 ||
             validation.replayRunId === null ||
+            validation.contentReconciliationStatus !== "matched" ||
             !validation.idempotencyVerified ||
             validation.duplicateRowsDetected !== 0
         ).toBe(true);
