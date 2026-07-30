@@ -487,6 +487,30 @@ describe("demo-data: incident recovery validation", () => {
     }
   });
 
+  it("should expose complete row-level reconciliation coverage", () => {
+    const incompleteComparisons = pipelineRecoveryValidations.filter(
+      (validation) => validation.recordsCompared < validation.recordsExpected
+    );
+
+    expect(incompleteComparisons.length).toBeGreaterThanOrEqual(1);
+
+    for (const validation of pipelineRecoveryValidations) {
+      expect(validation.recordsExpected).toBeGreaterThan(0);
+      expect(validation.recordsCompared).toBeGreaterThanOrEqual(0);
+      expect(validation.recordsCompared).toBeLessThanOrEqual(
+        validation.recordsExpected
+      );
+
+      if (validation.status === "ready_to_publish") {
+        expect(validation.recordsCompared).toBe(validation.recordsExpected);
+      }
+    }
+
+    for (const validation of incompleteComparisons) {
+      expect(validation.status).not.toBe("ready_to_publish");
+    }
+  });
+
   it("should reconcile replay content beyond row-count checks", () => {
     const statuses = new Set(
       pipelineRecoveryValidations.map(

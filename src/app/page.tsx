@@ -607,6 +607,9 @@ function AlertPanel() {
                   : ` · ${validation.rowCountVariancePercent}% row variance`}
               </p>
               <p className="mt-1 text-slate-600">
+                Row reconciliation: {validation.recordsCompared.toLocaleString()} / {validation.recordsExpected.toLocaleString()} records compared
+              </p>
+              <p className="mt-1 text-slate-600">
                 Content reconciliation: {validation.contentReconciliationStatus} · source {validation.sourceChecksum ?? "pending"} · target {validation.targetChecksum ?? "pending"}
               </p>
               <p className="mt-1 text-slate-500">

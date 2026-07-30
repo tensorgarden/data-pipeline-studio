@@ -88,6 +88,8 @@ export interface PipelineRecoveryValidation {
   replayWindowEnd: string;
   replayRunId: string | null;
   rowCountVariancePercent: number | null;
+  recordsExpected: number;
+  recordsCompared: number;
   contentReconciliationStatus: ContentReconciliationStatus;
   sourceChecksum: string | null;
   targetChecksum: string | null;
