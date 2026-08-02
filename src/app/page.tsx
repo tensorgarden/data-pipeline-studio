@@ -610,6 +610,12 @@ function AlertPanel() {
                 Row reconciliation: {validation.recordsCompared.toLocaleString()} / {validation.recordsExpected.toLocaleString()} records compared
               </p>
               <p className="mt-1 text-slate-600">
+                Validation exceptions: {validation.validationFailedRecords} failed · {validation.validationPendingRecords} pending · {validation.validationSuspendedRecords} suspended · {validation.validationExceptionStatus.replaceAll("_", " ")}
+              </p>
+              <p className="mt-1 text-slate-500">
+                Quarantine: {validation.quarantineLocation ?? "not required"} · {validation.exceptionRemediationPlan}
+              </p>
+              <p className="mt-1 text-slate-600">
                 Content reconciliation: {validation.contentReconciliationStatus} · source {validation.sourceChecksum ?? "pending"} · target {validation.targetChecksum ?? "pending"}
               </p>
               <p className="mt-1 text-slate-500">

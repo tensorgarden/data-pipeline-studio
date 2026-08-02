@@ -511,6 +511,39 @@ describe("demo-data: incident recovery validation", () => {
     }
   });
 
+  it("should quarantine unresolved validation exceptions before publication", () => {
+    const unresolved = pipelineRecoveryValidations.filter(
+      (validation) =>
+        validation.validationFailedRecords +
+          validation.validationPendingRecords +
+          validation.validationSuspendedRecords >
+        0
+    );
+
+    expect(unresolved.length).toBeGreaterThanOrEqual(1);
+
+    for (const validation of pipelineRecoveryValidations) {
+      expect(validation.validationFailedRecords).toBeGreaterThanOrEqual(0);
+      expect(validation.validationPendingRecords).toBeGreaterThanOrEqual(0);
+      expect(validation.validationSuspendedRecords).toBeGreaterThanOrEqual(0);
+      expect(validation.exceptionRemediationPlan.length).toBeGreaterThan(80);
+
+      const exceptionCount =
+        validation.validationFailedRecords +
+        validation.validationPendingRecords +
+        validation.validationSuspendedRecords;
+
+      if (exceptionCount > 0) {
+        expect(validation.validationExceptionStatus).not.toBe("cleared");
+        expect(validation.quarantineLocation).toMatch(/^s3:\/\/recovery-quarantine\//);
+        expect(validation.status).not.toBe("ready_to_publish");
+      } else {
+        expect(validation.validationExceptionStatus).toBe("cleared");
+        expect(validation.quarantineLocation).toBeNull();
+      }
+    }
+  });
+
   it("should reconcile replay content beyond row-count checks", () => {
     const statuses = new Set(
       pipelineRecoveryValidations.map(

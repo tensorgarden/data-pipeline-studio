@@ -43,6 +43,7 @@ export type RecoveryValidationStatus =
   | "ready_to_publish";
 export type ReplayWriteMode = "append" | "upsert" | "partition_overwrite";
 export type ContentReconciliationStatus = "pending" | "mismatch" | "matched";
+export type ValidationExceptionStatus = "pending_triage" | "quarantined" | "cleared";
 
 export interface AlertCorrelationContext {
   rootCauseAlertId: string | null;
@@ -90,6 +91,12 @@ export interface PipelineRecoveryValidation {
   rowCountVariancePercent: number | null;
   recordsExpected: number;
   recordsCompared: number;
+  validationFailedRecords: number;
+  validationPendingRecords: number;
+  validationSuspendedRecords: number;
+  validationExceptionStatus: ValidationExceptionStatus;
+  quarantineLocation: string | null;
+  exceptionRemediationPlan: string;
   contentReconciliationStatus: ContentReconciliationStatus;
   sourceChecksum: string | null;
   targetChecksum: string | null;
