@@ -450,6 +450,12 @@ export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
     duplicateRowsDetected: null,
     idempotencyEvidence:
       "Append-only replay still lacks an approved business-key deduplication rule, so a retry could duplicate account snapshots in the staging partition.",
+    replayCostApprovalStatus: "awaiting_approval",
+    estimatedReplayCostUsd: 1240,
+    replayCostApprovalThresholdUsd: 500,
+    replayCostApprover: null,
+    replayCostEvidence:
+      "Pre-flight pricing for the 6.5-hour customer-360 replay projects 1,240 USD in warehouse scan and shuffle compute, above the 500 USD approval threshold; the platform lead has not signed off, so the replay remains unscheduled.",
     status: "blocked",
     ownerTeam: "Data Platform On-call",
     publishDecisionDueAt: "2026-06-09T12:00:00Z",
@@ -492,6 +498,12 @@ export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
     duplicateRowsDetected: 27,
     idempotencyEvidence:
       "Dry-run upsert found 27 duplicate account-period keys after replay; merge ordering must be corrected before finance aggregates are republished.",
+    replayCostApprovalStatus: "approved",
+    estimatedReplayCostUsd: 780,
+    replayCostApprovalThresholdUsd: 500,
+    replayCostApprover: "Priya Raman, Finance Analytics Manager",
+    replayCostEvidence:
+      "The finance replay estimate of 780 USD exceeded the 500 USD threshold and received recorded approval from Priya Raman before run-6 launched, so compute cost does not block publication; the content and idempotency findings still do.",
     status: "validating",
     ownerTeam: "Analytics Engineering",
     publishDecisionDueAt: "2026-06-09T13:00:00Z",
@@ -534,6 +546,12 @@ export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
     duplicateRowsDetected: 0,
     idempotencyEvidence:
       "Repeated partition-overwrite verification produced the same event-id set with zero duplicate rows, confirming a safe retry for this window.",
+    replayCostApprovalStatus: "within_threshold",
+    estimatedReplayCostUsd: 42,
+    replayCostApprovalThresholdUsd: 500,
+    replayCostApprover: null,
+    replayCostEvidence:
+      "The 42-second partition-overwrite replay scans a single compacted clickstream partition for an estimated 42 USD, below the 500 USD approval threshold, so no additional cost sign-off was required before publication.",
     status: "ready_to_publish",
     ownerTeam: "Streaming Platform",
     publishDecisionDueAt: "2026-06-09T11:15:00Z",

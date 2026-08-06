@@ -45,6 +45,12 @@ export type ReplayWriteMode = "append" | "upsert" | "partition_overwrite";
 export type ContentReconciliationStatus = "pending" | "mismatch" | "matched";
 export type ValidationExceptionStatus = "pending_triage" | "quarantined" | "cleared";
 
+export type ReplayCostApprovalStatus =
+  | "pending_estimate"
+  | "awaiting_approval"
+  | "approved"
+  | "within_threshold";
+
 export interface AlertCorrelationContext {
   rootCauseAlertId: string | null;
   suppressedDuplicateCount: number;
@@ -113,6 +119,11 @@ export interface PipelineRecoveryValidation {
   idempotencyVerified: boolean;
   duplicateRowsDetected: number | null;
   idempotencyEvidence: string;
+  replayCostApprovalStatus: ReplayCostApprovalStatus;
+  estimatedReplayCostUsd: number | null;
+  replayCostApprovalThresholdUsd: number;
+  replayCostApprover: string | null;
+  replayCostEvidence: string;
   status: RecoveryValidationStatus;
   ownerTeam: string;
   publishDecisionDueAt: string;

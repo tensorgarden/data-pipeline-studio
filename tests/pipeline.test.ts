@@ -667,6 +667,11 @@ describe("demo-data: incident recovery validation", () => {
         expect(validation.idempotencyVerified).toBe(true);
         expect(validation.duplicateRowsDetected).toBe(0);
         expect(validation.deduplicationKey).not.toBeNull();
+        expect(validation.estimatedReplayCostUsd).not.toBeNull();
+        expect(
+          validation.replayCostApprovalStatus === "approved" ||
+            validation.replayCostApprovalStatus === "within_threshold"
+        ).toBe(true);
         expect(validation.blockingReason).toBeNull();
       } else {
         expect(validation.blockingReason?.length).toBeGreaterThan(80);
@@ -678,7 +683,10 @@ describe("demo-data: incident recovery validation", () => {
             validation.replayRunId === null ||
             validation.contentReconciliationStatus !== "matched" ||
             !validation.idempotencyVerified ||
-            validation.duplicateRowsDetected !== 0
+            validation.duplicateRowsDetected !== 0 ||
+            validation.estimatedReplayCostUsd === null ||
+            validation.replayCostApprovalStatus === "pending_estimate" ||
+            validation.replayCostApprovalStatus === "awaiting_approval"
         ).toBe(true);
       }
     }
@@ -697,6 +705,67 @@ describe("demo-data: incident recovery validation", () => {
     expect(actionableAlerts.length).toBeGreaterThanOrEqual(1);
     for (const alert of actionableAlerts) {
       expect(coveredAlertIds.has(alert.id)).toBe(true);
+    }
+  });
+
+  it("should require cost preflight approval for expensive replays", () => {
+    const statuses = new Set(
+      pipelineRecoveryValidations.map(
+        (validation) => validation.replayCostApprovalStatus
+      )
+    );
+
+    expect(statuses.has("awaiting_approval")).toBe(true);
+    expect(statuses.has("approved")).toBe(true);
+    expect(statuses.has("within_threshold")).toBe(true);
+
+    for (const validation of pipelineRecoveryValidations) {
+      expect(validation.replayCostApprovalThresholdUsd).toBeGreaterThan(0);
+      expect(validation.replayCostEvidence.length).toBeGreaterThan(80);
+
+      if (validation.replayCostApprovalStatus === "pending_estimate") {
+        expect(validation.estimatedReplayCostUsd).toBeNull();
+        expect(validation.replayCostApprover).toBeNull();
+      } else {
+        expect(validation.estimatedReplayCostUsd).not.toBeNull();
+        expect(validation.estimatedReplayCostUsd).toBeGreaterThanOrEqual(0);
+      }
+
+      if (validation.replayCostApprovalStatus === "awaiting_approval") {
+        expect(validation.estimatedReplayCostUsd).toBeGreaterThan(
+          validation.replayCostApprovalThresholdUsd
+        );
+        expect(validation.replayCostApprover).toBeNull();
+        expect(validation.status).not.toBe("ready_to_publish");
+      }
+
+      if (validation.replayCostApprovalStatus === "approved") {
+        expect(validation.estimatedReplayCostUsd).toBeGreaterThan(
+          validation.replayCostApprovalThresholdUsd
+        );
+        expect(validation.replayCostApprover?.trim().length).toBeGreaterThan(3);
+      }
+
+      if (validation.replayCostApprovalStatus === "within_threshold") {
+        expect(validation.estimatedReplayCostUsd).toBeLessThanOrEqual(
+          validation.replayCostApprovalThresholdUsd
+        );
+        expect(validation.replayCostApprover).toBeNull();
+      }
+    }
+  });
+
+  it("should keep unpriced or unapproved replays out of ready-to-publish", () => {
+    const costBlocked = pipelineRecoveryValidations.filter(
+      (validation) =>
+        validation.replayCostApprovalStatus === "pending_estimate" ||
+        validation.replayCostApprovalStatus === "awaiting_approval" ||
+        validation.estimatedReplayCostUsd === null
+    );
+
+    expect(costBlocked.length).toBeGreaterThanOrEqual(1);
+    for (const validation of costBlocked) {
+      expect(validation.status).not.toBe("ready_to_publish");
     }
   });
 });

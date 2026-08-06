@@ -639,6 +639,16 @@ function AlertPanel() {
               <p className="mt-1 text-slate-500">
                 Key: {validation.deduplicationKey ?? "none approved"} · {validation.idempotencyEvidence}
               </p>
+              <p className="mt-1 text-slate-600">
+                Replay cost preflight: {validation.replayCostApprovalStatus.replaceAll("_", " ")}
+                {validation.estimatedReplayCostUsd === null
+                  ? " · estimate pending"
+                  : ` · est. ${formatCurrency(validation.estimatedReplayCostUsd)} / ${formatCurrency(validation.replayCostApprovalThresholdUsd)} threshold`}
+                {validation.replayCostApprover ? ` · approved by ${validation.replayCostApprover}` : ""}
+              </p>
+              <p className="mt-1 text-slate-500">
+                {validation.replayCostEvidence}
+              </p>
               <p className="mt-1 text-slate-500">
                 Owner: {validation.ownerTeam} · Publish decision due {formatUtcDateTime(validation.publishDecisionDueAt)}
               </p>
