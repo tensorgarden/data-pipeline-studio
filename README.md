@@ -15,6 +15,18 @@ Data Pipeline Studio is a comprehensive dashboard for managing and monitoring da
 - **Source Connector Health**: Monitor source connectors (Postgres, BigQuery, Kafka, S3, MySQL, Redis, API, MongoDB)
 - **Alert Panel**: Real-time alerts for failed pipelines, failed runs, and degraded sources
 
+## Screenshots
+
+| Screenshot | Description |
+|---|---|
+| ![Alerts requiring attention with contract drift and SLO breaches](docs/screenshots/01-alerts-dashboard.png) | Alerts requiring attention with contract drift and SLO breaches |
+| ![Pipeline status grid with active, running, and failed pipelines](docs/screenshots/02-pipeline-status.png) | Pipeline status grid with active, running, and failed pipelines |
+| ![Run timeline and data quality dashboard with check metrics](docs/screenshots/03-run-timeline-quality.png) | Run timeline and data quality dashboard with check metrics |
+| ![ETL job scheduler with batch and streaming job types](docs/screenshots/04-etl-scheduler.png) | ETL job scheduler with batch and streaming job types |
+| ![Source connector health with latency and sync status](docs/screenshots/05-connector-health.png) | Source connector health with latency and sync status |
+| ![Full data pipeline studio dashboard with all metrics](docs/screenshots/06-full-dashboard.png) | Full data pipeline studio dashboard with all metrics |
+| ![Full-page portfolio demo screenshot](docs/screenshots/00-full-page.png) | Full-page portfolio demo screenshot |
+
 ## Demo Data
 
 The demo includes:
