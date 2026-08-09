@@ -848,6 +848,93 @@ describe("demo-data: pipeline cost observability", () => {
   });
 });
 
+describe("demo-data: recovery state progression", () => {
+  const pipelineIds = new Set(pipelines.map((pipeline) => pipeline.id));
+
+  it("should expose blocked recovery gates with named blocking reasons", () => {
+    const blockedRecoveries = pipelineRecoveryValidations.filter(
+      (validation) => validation.status === "blocked"
+    );
+
+    expect(blockedRecoveries.length).toBeGreaterThanOrEqual(1);
+
+    for (const validation of blockedRecoveries) {
+      expect(validation.blockingReason).not.toBeNull();
+      expect(validation.blockingReason?.trim().length ?? 0).toBeGreaterThan(20);
+      expect(pipelineIds.has(validation.pipelineId)).toBe(true);
+    }
+  });
+
+  it("should separate validating recoveries from ready-to-publish with progress evidence", () => {
+    const validatingRecoveries = pipelineRecoveryValidations.filter(
+      (validation) => validation.status === "validating"
+    );
+    const readyRecoveries = pipelineRecoveryValidations.filter(
+      (validation) => validation.status === "ready_to_publish"
+    );
+
+    expect(validatingRecoveries.length).toBeGreaterThanOrEqual(1);
+    expect(readyRecoveries.length).toBeGreaterThanOrEqual(1);
+
+    for (const validation of validatingRecoveries) {
+      const incompleteQuality =
+        validation.qualityChecksPassed < validation.qualityChecksRequired;
+      const reconciliationPending =
+        validation.contentReconciliationStatus === "pending" ||
+        validation.contentReconciliationStatus === "mismatch";
+
+      expect(
+        incompleteQuality ||
+          reconciliationPending ||
+          validation.validationPendingRecords > 0
+      ).toBe(true);
+    }
+
+    for (const validation of readyRecoveries) {
+      expect(validation.qualityChecksPassed).toBe(
+        validation.qualityChecksRequired
+      );
+      expect(validation.contentReconciliationStatus).toBe("matched");
+      expect(validation.validationExceptionStatus).not.toBe("pending_triage");
+      expect(validation.blockingReason).toBeNull();
+    }
+  });
+
+  it("should require proof before publishing: cost approval, quality gates, and downstream verification", () => {
+    const readyRecoveries = pipelineRecoveryValidations.filter(
+      (validation) => validation.status === "ready_to_publish"
+    );
+
+    expect(readyRecoveries.length).toBeGreaterThanOrEqual(1);
+
+    for (const validation of readyRecoveries) {
+      if (validation.estimatedReplayCostUsd !== null) {
+        expect(["approved", "within_threshold"]).toContain(
+          validation.replayCostApprovalStatus
+        );
+        if (validation.replayCostApprovalStatus === "approved") {
+          expect(validation.replayCostApprover).not.toBeNull();
+          expect(validation.replayCostEvidence.length).toBeGreaterThan(40);
+        }
+      }
+
+      expect(validation.qualityChecksPassed).toBe(
+        validation.qualityChecksRequired
+      );
+
+      expect(validation.downstreamWatermarkVerified).toBe(true);
+
+      if (
+        validation.replayWriteMode === "upsert" ||
+        validation.replayWriteMode === "partition_overwrite"
+      ) {
+        expect(validation.idempotencyVerified).toBe(true);
+        expect(validation.duplicateRowsDetected).not.toBeNull();
+      }
+    }
+  });
+});
+
 describe("demo-data: computeMetrics", () => {
   it("should return correct totalPipelines count", () => {
     const m = computeMetrics();
