@@ -332,6 +332,16 @@ function QualityDashboard({
                 <p className="mt-1 text-amber-700">
                   Downstream: {downstreamNames || "none"}
                 </p>
+                <p className="mt-1 text-slate-500">
+                  Contract v{event.contractVersion} · consumer ack:{" "}
+                  {event.consumerAckStatus.replace("_", " ")}
+                </p>
+                {event.deprecationWindowEndsAt && (
+                  <p className="mt-1 text-rose-700">
+                    Deprecation window ends{" "}
+                    {formatUtcDateTime(event.deprecationWindowEndsAt)}
+                  </p>
+                )}
               </div>
             );
           })}

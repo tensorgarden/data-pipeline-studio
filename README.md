@@ -14,6 +14,7 @@ Data Pipeline Studio is a comprehensive dashboard for managing and monitoring da
 - **ETL Job Scheduler**: Manage batch, streaming, scheduled, and event-driven ETL jobs
 - **Source Connector Health**: Monitor source connectors (Postgres, BigQuery, Kafka, S3, MySQL, Redis, API, MongoDB)
 - **Alert Panel**: Real-time alerts for failed pipelines, failed runs, and degraded sources
+- **Schema Drift Tracking**: Typed drift events with contract versioning, deprecation windows, and consumer acknowledgement states for breaking source changes
 
 ## Screenshots
 

@@ -1044,3 +1044,73 @@ describe("demo-data: pipeline lineage", () => {
     expect(sourcePipelines.length).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe("demo-data: schema drift consumer contract coordination", () => {
+  const semverPattern = /^\d+\.\d+\.\d+$/;
+
+  it("should version every drift event against its source contract", () => {
+    expect(schemaDriftEvents.length).toBeGreaterThanOrEqual(4);
+
+    for (const event of schemaDriftEvents) {
+      expect(semverPattern.test(event.contractVersion)).toBe(true);
+    }
+  });
+
+  it("should publish deprecation windows and named consumer teams for breaking drift", () => {
+    const breakingEvents = schemaDriftEvents.filter(
+      (event) => event.severity === "breaking"
+    );
+
+    expect(breakingEvents.length).toBeGreaterThanOrEqual(2);
+
+    for (const event of breakingEvents) {
+      expect(event.deprecationWindowEndsAt).not.toBeNull();
+      const windowEnd = Date.parse(event.deprecationWindowEndsAt as string);
+      expect(windowEnd).toBeGreaterThan(Date.parse(event.detectedAt));
+      expect(event.consumerTeamsAffected.length).toBeGreaterThanOrEqual(1);
+
+      for (const team of event.consumerTeamsAffected) {
+        expect(team.trim().length).toBeGreaterThan(3);
+      }
+
+      expect(event.consumerAckStatus).not.toBe("acknowledged");
+    }
+  });
+
+  it("should not require deprecation windows for additive or semantic drift", () => {
+    const nonBreakingEvents = schemaDriftEvents.filter(
+      (event) => event.severity !== "breaking"
+    );
+
+    expect(nonBreakingEvents.length).toBeGreaterThanOrEqual(2);
+
+    for (const event of nonBreakingEvents) {
+      expect(event.deprecationWindowEndsAt).toBeNull();
+    }
+  });
+
+  it("should require consumer acknowledgement before resolved drift can close", () => {
+    const resolvedEvents = schemaDriftEvents.filter(
+      (event) => event.status === "resolved"
+    );
+
+    expect(resolvedEvents.length).toBeGreaterThanOrEqual(1);
+
+    for (const event of resolvedEvents) {
+      expect(event.consumerAckStatus).toBe("acknowledged");
+    }
+  });
+
+  it("should show partial acknowledgement while consumer migrations are in flight", () => {
+    const partialEvents = schemaDriftEvents.filter(
+      (event) => event.consumerAckStatus === "partial"
+    );
+
+    expect(partialEvents.length).toBeGreaterThanOrEqual(1);
+
+    for (const event of partialEvents) {
+      expect(event.severity).toBe("breaking");
+      expect(event.status).toBe("remediating");
+    }
+  });
+});

@@ -12,6 +12,10 @@ export type SchemaDriftChangeType =
   | "semantic_change";
 export type SchemaDriftSeverity = "info" | "warning" | "breaking";
 export type SchemaDriftStatus = "monitoring" | "remediating" | "resolved";
+export type SchemaDriftConsumerAckStatus =
+  | "pending"
+  | "partial"
+  | "acknowledged";
 export type PipelineErrorCategory =
   | "schema_violation"
   | "null_violation"
@@ -190,6 +194,10 @@ export interface SchemaDriftEvent {
   status: SchemaDriftStatus;
   detectedAt: string;
   downstreamPipelineIds: string[];
+  contractVersion: string;
+  deprecationWindowEndsAt: string | null;
+  consumerAckStatus: SchemaDriftConsumerAckStatus;
+  consumerTeamsAffected: string[];
   remediationPlan: string;
 }
 

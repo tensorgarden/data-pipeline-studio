@@ -240,6 +240,10 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     status: "remediating",
     detectedAt: "2026-06-09T10:11:00Z",
     downstreamPipelineIds: ["p-3"],
+    contractVersion: "2.3.0",
+    deprecationWindowEndsAt: "2026-06-16T23:59:59Z",
+    consumerAckStatus: "pending",
+    consumerTeamsAffected: ["Finance Analytics"],
     remediationPlan:
       "Hold Data Lake Aggregator publishing, update the typed revenue transform, and replay the overnight load after the PostgreSQL contract is approved.",
   },
@@ -253,6 +257,10 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     status: "monitoring",
     detectedAt: "2026-06-09T10:33:00Z",
     downstreamPipelineIds: ["p-8"],
+    contractVersion: "1.8.1",
+    deprecationWindowEndsAt: null,
+    consumerAckStatus: "pending",
+    consumerTeamsAffected: ["CRM Operations"],
     remediationPlan:
       "Register the nullable CRM field in the MongoDB archive contract before promotion so downstream analysts see an intentional schema extension.",
   },
@@ -266,8 +274,29 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     status: "resolved",
     detectedAt: "2026-06-09T09:52:00Z",
     downstreamPipelineIds: [],
+    contractVersion: "1.4.0",
+    deprecationWindowEndsAt: null,
+    consumerAckStatus: "acknowledged",
+    consumerTeamsAffected: ["Growth Analytics"],
     remediationPlan:
       "Documented the campaign-tagging semantic shift and confirmed real-time funnel analytics dashboards already normalize the new URL format.",
+  },
+  {
+    id: "drift-4",
+    pipelineId: "p-1",
+    sourceId: "src-1",
+    fieldName: "customer_lifetime_value_tier",
+    changeType: "column_removed",
+    severity: "breaking",
+    status: "remediating",
+    detectedAt: "2026-06-10T08:05:00Z",
+    downstreamPipelineIds: ["p-4"],
+    contractVersion: "4.2.0",
+    deprecationWindowEndsAt: "2026-06-13T23:59:59Z",
+    consumerAckStatus: "partial",
+    consumerTeamsAffected: ["Marketing Analytics", "Growth Data Science"],
+    remediationPlan:
+      "Restore the deprecated tier column in the PostgreSQL publishing view while Marketing Analytics and Growth Data Science finish their migrations, then retire the field only after the deprecation window closes.",
   },
 ];
 
