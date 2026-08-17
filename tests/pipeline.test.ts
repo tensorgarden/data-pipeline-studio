@@ -1114,3 +1114,56 @@ describe("demo-data: schema drift consumer contract coordination", () => {
     }
   });
 });
+
+describe("demo-data: schema drift escalation after deprecation windows expire", () => {
+  const maxDetectedAt = Math.max(
+    ...schemaDriftEvents.map((event) => Date.parse(event.detectedAt))
+  );
+
+  const escalatedEvents = schemaDriftEvents.filter(
+    (event) => event.status === "escalated"
+  );
+
+  it("should escalate breaking drift once the deprecation window expires unacknowledged", () => {
+    expect(escalatedEvents.length).toBeGreaterThanOrEqual(1);
+
+    for (const event of escalatedEvents) {
+      expect(event.severity).toBe("breaking");
+      expect(event.deprecationWindowEndsAt).not.toBeNull();
+      expect(event.consumerAckStatus).not.toBe("acknowledged");
+      expect(event.escalatedAt).not.toBeNull();
+      expect(Date.parse(event.escalatedAt as string)).toBeGreaterThan(
+        Date.parse(event.deprecationWindowEndsAt as string)
+      );
+    }
+  });
+
+  it("should assign escalation to a named owner separate from downstream consumer teams", () => {
+    for (const event of escalatedEvents) {
+      expect(event.escalationOwnerTeam).not.toBeNull();
+      expect((event.escalationOwnerTeam as string).trim().length).toBeGreaterThan(
+        6
+      );
+      for (const team of event.consumerTeamsAffected) {
+        expect(event.escalationOwnerTeam).not.toBe(team);
+      }
+    }
+  });
+
+  it("should never leave an expired unacknowledged window in ordinary remediation", () => {
+    const expiredUnacknowledged = schemaDriftEvents.filter(
+      (event) =>
+        event.deprecationWindowEndsAt !== null &&
+        Date.parse(event.deprecationWindowEndsAt) < maxDetectedAt &&
+        event.consumerAckStatus !== "acknowledged"
+    );
+
+    expect(expiredUnacknowledged.length).toBeGreaterThanOrEqual(1);
+
+    for (const event of expiredUnacknowledged) {
+      expect(event.status).toBe("escalated");
+      expect(event.status).not.toBe("remediating");
+      expect(event.status).not.toBe("monitoring");
+    }
+  });
+});

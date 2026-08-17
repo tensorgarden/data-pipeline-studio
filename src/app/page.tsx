@@ -314,17 +314,22 @@ function QualityDashboard({
                   <span className="font-medium text-slate-700">
                     {pipe?.name ?? event.pipelineId}
                   </span>
-                  <Badge
-                    variant={
-                      event.severity === "breaking"
-                        ? "danger"
-                        : event.severity === "warning"
-                          ? "warning"
-                          : "info"
-                    }
-                  >
-                    {event.severity}
-                  </Badge>
+                  <span className="flex items-center gap-1">
+                    {event.status === "escalated" && (
+                      <Badge variant="danger">escalated</Badge>
+                    )}
+                    <Badge
+                      variant={
+                        event.severity === "breaking"
+                          ? "danger"
+                          : event.severity === "warning"
+                            ? "warning"
+                            : "info"
+                      }
+                    >
+                      {event.severity}
+                    </Badge>
+                  </span>
                 </div>
                 <p className="text-slate-500">
                   {event.fieldName} · {event.changeType.replace("_", " ")} · {timeAgo(event.detectedAt)}
@@ -338,8 +343,18 @@ function QualityDashboard({
                 </p>
                 {event.deprecationWindowEndsAt && (
                   <p className="mt-1 text-rose-700">
-                    Deprecation window ends{" "}
-                    {formatUtcDateTime(event.deprecationWindowEndsAt)}
+                    {event.status === "escalated"
+                      ? `Deprecation window expired ${formatUtcDateTime(event.deprecationWindowEndsAt)}`
+                      : `Deprecation window ends ${formatUtcDateTime(event.deprecationWindowEndsAt)}`}
+                  </p>
+                )}
+                {event.status === "escalated" && (
+                  <p className="mt-1 text-rose-700">
+                    Escalated{" "}
+                    {event.escalatedAt
+                      ? formatUtcDateTime(event.escalatedAt)
+                      : ""}{" "}
+                    · owner: {event.escalationOwnerTeam ?? "unassigned"}
                   </p>
                 )}
               </div>

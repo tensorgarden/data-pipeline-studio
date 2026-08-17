@@ -11,7 +11,11 @@ export type SchemaDriftChangeType =
   | "type_changed"
   | "semantic_change";
 export type SchemaDriftSeverity = "info" | "warning" | "breaking";
-export type SchemaDriftStatus = "monitoring" | "remediating" | "resolved";
+export type SchemaDriftStatus =
+  | "monitoring"
+  | "remediating"
+  | "escalated"
+  | "resolved";
 export type SchemaDriftConsumerAckStatus =
   | "pending"
   | "partial"
@@ -198,6 +202,8 @@ export interface SchemaDriftEvent {
   deprecationWindowEndsAt: string | null;
   consumerAckStatus: SchemaDriftConsumerAckStatus;
   consumerTeamsAffected: string[];
+  escalatedAt: string | null;
+  escalationOwnerTeam: string | null;
   remediationPlan: string;
 }
 

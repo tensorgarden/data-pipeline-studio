@@ -244,6 +244,8 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: "2026-06-16T23:59:59Z",
     consumerAckStatus: "pending",
     consumerTeamsAffected: ["Finance Analytics"],
+    escalatedAt: null,
+    escalationOwnerTeam: null,
     remediationPlan:
       "Hold Data Lake Aggregator publishing, update the typed revenue transform, and replay the overnight load after the PostgreSQL contract is approved.",
   },
@@ -261,6 +263,8 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: null,
     consumerAckStatus: "pending",
     consumerTeamsAffected: ["CRM Operations"],
+    escalatedAt: null,
+    escalationOwnerTeam: null,
     remediationPlan:
       "Register the nullable CRM field in the MongoDB archive contract before promotion so downstream analysts see an intentional schema extension.",
   },
@@ -278,6 +282,8 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: null,
     consumerAckStatus: "acknowledged",
     consumerTeamsAffected: ["Growth Analytics"],
+    escalatedAt: null,
+    escalationOwnerTeam: null,
     remediationPlan:
       "Documented the campaign-tagging semantic shift and confirmed real-time funnel analytics dashboards already normalize the new URL format.",
   },
@@ -295,8 +301,29 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: "2026-06-13T23:59:59Z",
     consumerAckStatus: "partial",
     consumerTeamsAffected: ["Marketing Analytics", "Growth Data Science"],
+    escalatedAt: null,
+    escalationOwnerTeam: null,
     remediationPlan:
       "Restore the deprecated tier column in the PostgreSQL publishing view while Marketing Analytics and Growth Data Science finish their migrations, then retire the field only after the deprecation window closes.",
+  },
+  {
+    id: "drift-5",
+    pipelineId: "p-5",
+    sourceId: "src-7",
+    fieldName: "lead_source_code",
+    changeType: "column_removed",
+    severity: "breaking",
+    status: "escalated",
+    detectedAt: "2026-06-01T09:00:00Z",
+    downstreamPipelineIds: ["p-8"],
+    contractVersion: "2.1.4",
+    deprecationWindowEndsAt: "2026-06-08T23:59:59Z",
+    consumerAckStatus: "pending",
+    consumerTeamsAffected: ["CRM Operations"],
+    escalatedAt: "2026-06-09T08:30:00Z",
+    escalationOwnerTeam: "Data Governance Steering",
+    remediationPlan:
+      "The deprecation window closed before CRM Operations acknowledged the removed lead source column. The contract owner escalated enforcement to the data governance steering group and MongoDB archive publishing stays frozen until consumers confirm the field is no longer referenced.",
   },
 ];
 
