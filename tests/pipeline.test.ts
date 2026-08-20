@@ -9,6 +9,7 @@ import {
   observabilityAlerts,
   pipelineCostSignals,
   pipelineRecoveryValidations,
+  partitionFreshnessRecords,
   computeMetrics,
 } from "@/lib/demo-data";
 
@@ -1165,5 +1166,66 @@ describe("demo-data: schema drift escalation after deprecation windows expire", 
       expect(event.status).not.toBe("remediating");
       expect(event.status).not.toBe("monitoring");
     }
+  });
+});
+
+describe("demo-data: partition-level freshness", () => {
+  const pipelineIds = new Set(pipelines.map((pipeline) => pipeline.id));
+
+  it("should track bounded partition coverage with valid pipeline references", () => {
+    const recordIds = new Set(
+      partitionFreshnessRecords.map((record) => record.id)
+    );
+
+    expect(partitionFreshnessRecords.length).toBeGreaterThanOrEqual(3);
+    expect(recordIds.size).toBe(partitionFreshnessRecords.length);
+
+    for (const record of partitionFreshnessRecords) {
+      expect(pipelineIds.has(record.pipelineId)).toBe(true);
+      expect(record.partitionKey.trim().length).toBeGreaterThan(3);
+      expect(record.expectedMaxAgeMinutes).toBeGreaterThan(0);
+      expect(record.partitionsExpected).toBeGreaterThan(0);
+      expect(record.partitionsFresh).toBeGreaterThanOrEqual(0);
+      expect(record.partitionsFresh).toBeLessThanOrEqual(record.partitionsExpected);
+      expect(Number.isNaN(Date.parse(record.checkedAt))).toBe(false);
+      expect(record.impactSummary.length).toBeGreaterThan(80);
+    }
+  });
+
+  it("should distinguish full, partial, and unknown partition freshness", () => {
+    const statuses = new Set(
+      partitionFreshnessRecords.map((record) => record.status)
+    );
+
+    expect(statuses.has("fresh")).toBe(true);
+    expect(statuses.has("partial")).toBe(true);
+    expect(statuses.has("unknown")).toBe(true);
+
+    for (const record of partitionFreshnessRecords) {
+      if (record.status === "fresh") {
+        expect(record.partitionsFresh).toBe(record.partitionsExpected);
+        expect(record.stalePartitionNames).toHaveLength(0);
+      }
+
+      if (record.status === "partial") {
+        expect(record.partitionsFresh).toBeGreaterThan(0);
+        expect(record.partitionsFresh).toBeLessThan(record.partitionsExpected);
+        expect(record.stalePartitionNames.length).toBeGreaterThan(0);
+      }
+
+      if (record.status === "unknown") {
+        expect(record.partitionsFresh).toBe(0);
+        expect(record.stalePartitionNames).toHaveLength(0);
+      }
+    }
+  });
+
+  it("should keep partial or unknown partition evidence visible for review", () => {
+    const risks = partitionFreshnessRecords.filter(
+      (record) => record.status !== "fresh"
+    );
+
+    expect(risks.length).toBeGreaterThanOrEqual(2);
+    expect(risks.every((record) => record.impactSummary.length > 80)).toBe(true);
   });
 });

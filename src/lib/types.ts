@@ -51,6 +51,7 @@ export type RecoveryValidationStatus =
   | "ready_to_publish";
 export type ReplayWriteMode = "append" | "upsert" | "partition_overwrite";
 export type ContentReconciliationStatus = "pending" | "mismatch" | "matched";
+export type PartitionFreshnessStatus = "fresh" | "partial" | "stale" | "unknown";
 export type ValidationExceptionStatus = "pending_triage" | "quarantined" | "cleared";
 
 export type ReplayCostApprovalStatus =
@@ -93,6 +94,19 @@ export interface PipelineCostSignal {
   ownerTeam: string;
   optimizationAction: string;
   nextReviewDueAt: string;
+}
+
+export interface PartitionFreshnessEvidence {
+  id: string;
+  pipelineId: string;
+  partitionKey: string;
+  expectedMaxAgeMinutes: number;
+  checkedAt: string;
+  partitionsExpected: number;
+  partitionsFresh: number;
+  stalePartitionNames: string[];
+  status: PartitionFreshnessStatus;
+  impactSummary: string;
 }
 
 export interface PipelineRecoveryValidation {

@@ -11,6 +11,7 @@ import {
   observabilityAlerts,
   pipelineCostSignals,
   pipelineRecoveryValidations,
+  partitionFreshnessRecords,
   computeMetrics,
 } from "@/lib/demo-data";
 import {
@@ -516,6 +517,9 @@ function AlertPanel() {
   const recoveryGates = pipelineRecoveryValidations.filter(
     (validation) => validation.status !== "ready_to_publish"
   );
+  const partitionFreshnessRisks = partitionFreshnessRecords.filter(
+    (record) => record.status !== "fresh"
+  );
   const failedRuns = pipelineRuns.filter((r) => r.status === "failed");
   const failedPipelines = pipelines.filter((p) => p.status === "failed");
   const degradedSources = sourceConnectors.filter(
@@ -526,6 +530,7 @@ function AlertPanel() {
     contextAlerts.length > 0 ||
     costSignals.length > 0 ||
     recoveryGates.length > 0 ||
+    partitionFreshnessRisks.length > 0 ||
     failedRuns.length > 0 ||
     failedPipelines.length > 0 ||
     degradedSources.length > 0;
@@ -601,6 +606,33 @@ function AlertPanel() {
                     : "No duplicate paging suppressed"}{" "}
                 · {alert.correlation.suppressionWindowMinutes}m correlation window
               </p>
+            </div>
+          );
+        })}
+        {partitionFreshnessRisks.map((record) => {
+          const pipe = pipelines.find((pipeline) => pipeline.id === record.pipelineId);
+          const variant = record.status === "partial" ? "warning" : "danger";
+
+          return (
+            <div key={record.id} className="rounded bg-white p-3">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <StatusDot
+                    status={record.status === "partial" ? "warn" : "failed"}
+                  />
+                  <span className="font-medium text-amber-900">
+                    Partition freshness: {pipe?.name ?? record.pipelineId}
+                  </span>
+                </div>
+                <Badge variant={variant}>{record.status}</Badge>
+              </div>
+              <p className="text-slate-600">
+                {record.partitionsFresh}/{record.partitionsExpected} partitions fresh · {record.partitionKey} · {record.expectedMaxAgeMinutes}m SLO
+              </p>
+              <p className="mt-1 text-slate-500">
+                Stale partitions: {record.stalePartitionNames.length > 0 ? record.stalePartitionNames.join(", ") : "not observed"}
+              </p>
+              <p className="mt-1 text-amber-700">{record.impactSummary}</p>
             </div>
           );
         })}

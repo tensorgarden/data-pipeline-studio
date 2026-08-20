@@ -13,6 +13,7 @@ import {
   ObservabilityAlert,
   PipelineCostSignal,
   PipelineRecoveryValidation,
+  PartitionFreshnessEvidence,
 } from "./types";
 
 export const dataQualityChecks: DataQualityCheck[] = [
@@ -226,6 +227,48 @@ export const dataFreshnessRecords: DataFreshness[] = [
     nextCheckDue: "2026-06-10T04:30:00Z",
     businessImpact:
       "Archive freshness cannot be confirmed until the MongoDB connector recovers and emits a trusted watermark.",
+  },
+];
+
+export const partitionFreshnessRecords: PartitionFreshnessEvidence[] = [
+  {
+    id: "partition-freshness-1",
+    pipelineId: "p-1",
+    partitionKey: "event_date=2026-06-09",
+    expectedMaxAgeMinutes: 60,
+    checkedAt: "2026-06-09T11:00:00Z",
+    partitionsExpected: 24,
+    partitionsFresh: 24,
+    stalePartitionNames: [],
+    status: "fresh",
+    impactSummary:
+      "All customer-sync partitions cleared the hourly freshness SLO, so the Customer 360 dashboard has a consistent refresh boundary.",
+  },
+  {
+    id: "partition-freshness-2",
+    pipelineId: "p-3",
+    partitionKey: "business_date=2026-06-09",
+    expectedMaxAgeMinutes: 360,
+    checkedAt: "2026-06-09T10:20:00Z",
+    partitionsExpected: 8,
+    partitionsFresh: 6,
+    stalePartitionNames: ["region=eu-west-1", "region=ap-southeast-1"],
+    status: "partial",
+    impactSummary:
+      "The aggregate table looks available, but two revenue partitions are stale and could produce different totals for finance consumers using the same date.",
+  },
+  {
+    id: "partition-freshness-3",
+    pipelineId: "p-8",
+    partitionKey: "event_date=2026-06-08",
+    expectedMaxAgeMinutes: 1440,
+    checkedAt: "2026-06-09T10:05:00Z",
+    partitionsExpected: 4,
+    partitionsFresh: 0,
+    stalePartitionNames: [],
+    status: "unknown",
+    impactSummary:
+      "The MongoDB connector is down, so partition freshness cannot be confirmed until a trusted watermark returns from the archive source.",
   },
 ];
 
