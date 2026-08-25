@@ -20,6 +20,20 @@ export type SchemaDriftConsumerAckStatus =
   | "pending"
   | "partial"
   | "acknowledged";
+export type SchemaDriftMigrationStatus =
+  | "not_started"
+  | "in_progress"
+  | "verified";
+
+export interface SchemaDriftConsumerProgress {
+  consumerTeam: string;
+  status: SchemaDriftMigrationStatus;
+  completionPercent: number;
+  targetContractVersion: string;
+  migrationOwner: string;
+  lastUpdatedAt: string;
+}
+
 export type PipelineErrorCategory =
   | "schema_violation"
   | "null_violation"
@@ -216,6 +230,7 @@ export interface SchemaDriftEvent {
   deprecationWindowEndsAt: string | null;
   consumerAckStatus: SchemaDriftConsumerAckStatus;
   consumerTeamsAffected: string[];
+  consumerMigrationProgress: SchemaDriftConsumerProgress[];
   escalatedAt: string | null;
   escalationOwnerTeam: string | null;
   remediationPlan: string;

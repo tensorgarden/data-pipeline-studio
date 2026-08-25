@@ -305,6 +305,15 @@ function QualityDashboard({
             const downstreamNames = event.downstreamPipelineIds
               .map((id) => pipelines.find((p) => p.id === id)?.name ?? id)
               .join(", ");
+            const migrationVerifiedCount = event.consumerMigrationProgress.filter(
+              (progress) => progress.status === "verified"
+            ).length;
+            const migrationProgressSummary = event.consumerMigrationProgress
+              .map(
+                (progress) =>
+                  `${progress.consumerTeam}: ${progress.completionPercent}%`
+              )
+              .join(" · ");
 
             return (
               <div
@@ -341,6 +350,11 @@ function QualityDashboard({
                 <p className="mt-1 text-slate-500">
                   Contract v{event.contractVersion} · consumer ack:{" "}
                   {event.consumerAckStatus.replace("_", " ")}
+                </p>
+                <p className="mt-1 text-slate-500">
+                  Migration: {migrationVerifiedCount}/
+                  {event.consumerMigrationProgress.length} consumers verified ·{" "}
+                  {migrationProgressSummary}
                 </p>
                 {event.deprecationWindowEndsAt && (
                   <p className="mt-1 text-rose-700">

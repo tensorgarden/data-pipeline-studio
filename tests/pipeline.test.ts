@@ -1229,3 +1229,92 @@ describe("demo-data: partition-level freshness", () => {
     expect(risks.every((record) => record.impactSummary.length > 80)).toBe(true);
   });
 });
+
+describe("demo-data: per-consumer schema migration progress", () => {
+  const semverPattern = /^\d+\.\d+\.\d+$/;
+
+  it("should track every affected consumer with bounded migration evidence", () => {
+    for (const event of schemaDriftEvents) {
+      expect(event.consumerMigrationProgress).toHaveLength(
+        event.consumerTeamsAffected.length
+      );
+
+      const affectedTeams = new Set(event.consumerTeamsAffected);
+      const progressTeams = new Set(
+        event.consumerMigrationProgress.map((progress) => progress.consumerTeam)
+      );
+      expect(progressTeams).toEqual(affectedTeams);
+
+      for (const progress of event.consumerMigrationProgress) {
+        expect(progress.completionPercent).toBeGreaterThanOrEqual(0);
+        expect(progress.completionPercent).toBeLessThanOrEqual(100);
+        expect(semverPattern.test(progress.targetContractVersion)).toBe(true);
+        expect(Number.isNaN(Date.parse(progress.lastUpdatedAt))).toBe(false);
+        expect(progress.migrationOwner.trim().length).toBeGreaterThan(6);
+
+        if (progress.status === "verified") {
+          expect(progress.completionPercent).toBe(100);
+        } else {
+          expect(progress.completionPercent).toBeLessThan(100);
+        }
+      }
+    }
+  });
+
+  it("should align aggregate acknowledgement with per-consumer completion", () => {
+    for (const event of schemaDriftEvents) {
+      const verified = event.consumerMigrationProgress.filter(
+        (progress) => progress.status === "verified"
+      );
+
+      if (event.consumerAckStatus === "acknowledged") {
+        expect(verified).toHaveLength(event.consumerMigrationProgress.length);
+        expect(
+          event.consumerMigrationProgress.every(
+            (progress) => progress.completionPercent === 100
+          )
+        ).toBe(true);
+      }
+
+      if (event.consumerAckStatus === "partial") {
+        expect(verified.length).toBeGreaterThan(0);
+        expect(verified.length).toBeLessThan(
+          event.consumerMigrationProgress.length
+        );
+      }
+
+      if (event.consumerAckStatus === "pending") {
+        expect(verified).toHaveLength(0);
+      }
+    }
+  });
+
+  it("should keep escalated and in-flight drift visibly incomplete", () => {
+    const escalatedEvents = schemaDriftEvents.filter(
+      (event) => event.status === "escalated"
+    );
+    const partialEvents = schemaDriftEvents.filter(
+      (event) => event.consumerAckStatus === "partial"
+    );
+
+    expect(escalatedEvents.length).toBeGreaterThanOrEqual(1);
+    expect(partialEvents.length).toBeGreaterThanOrEqual(1);
+
+    for (const event of escalatedEvents) {
+      expect(
+        event.consumerMigrationProgress.some(
+          (progress) => progress.status !== "verified"
+        )
+      ).toBe(true);
+      expect(event.status).not.toBe("resolved");
+    }
+
+    for (const event of partialEvents) {
+      expect(
+        event.consumerMigrationProgress.some(
+          (progress) => progress.status === "in_progress"
+        )
+      ).toBe(true);
+    }
+  });
+});

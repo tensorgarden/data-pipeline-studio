@@ -287,6 +287,16 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: "2026-06-16T23:59:59Z",
     consumerAckStatus: "pending",
     consumerTeamsAffected: ["Finance Analytics"],
+    consumerMigrationProgress: [
+      {
+        consumerTeam: "Finance Analytics",
+        status: "in_progress",
+        completionPercent: 55,
+        targetContractVersion: "2.3.0",
+        migrationOwner: "Finance Data Contracts",
+        lastUpdatedAt: "2026-06-09T10:20:00Z",
+      },
+    ],
     escalatedAt: null,
     escalationOwnerTeam: null,
     remediationPlan:
@@ -306,6 +316,16 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: null,
     consumerAckStatus: "pending",
     consumerTeamsAffected: ["CRM Operations"],
+    consumerMigrationProgress: [
+      {
+        consumerTeam: "CRM Operations",
+        status: "not_started",
+        completionPercent: 0,
+        targetContractVersion: "1.8.1",
+        migrationOwner: "CRM Platform Enablement",
+        lastUpdatedAt: "2026-06-09T10:33:00Z",
+      },
+    ],
     escalatedAt: null,
     escalationOwnerTeam: null,
     remediationPlan:
@@ -325,6 +345,16 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: null,
     consumerAckStatus: "acknowledged",
     consumerTeamsAffected: ["Growth Analytics"],
+    consumerMigrationProgress: [
+      {
+        consumerTeam: "Growth Analytics",
+        status: "verified",
+        completionPercent: 100,
+        targetContractVersion: "1.4.0",
+        migrationOwner: "Growth Analytics Engineering",
+        lastUpdatedAt: "2026-06-09T10:02:00Z",
+      },
+    ],
     escalatedAt: null,
     escalationOwnerTeam: null,
     remediationPlan:
@@ -344,6 +374,24 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: "2026-06-13T23:59:59Z",
     consumerAckStatus: "partial",
     consumerTeamsAffected: ["Marketing Analytics", "Growth Data Science"],
+    consumerMigrationProgress: [
+      {
+        consumerTeam: "Marketing Analytics",
+        status: "verified",
+        completionPercent: 100,
+        targetContractVersion: "4.2.0",
+        migrationOwner: "Marketing Data Products",
+        lastUpdatedAt: "2026-06-10T09:00:00Z",
+      },
+      {
+        consumerTeam: "Growth Data Science",
+        status: "in_progress",
+        completionPercent: 65,
+        targetContractVersion: "4.2.0",
+        migrationOwner: "Growth Data Science",
+        lastUpdatedAt: "2026-06-10T08:45:00Z",
+      },
+    ],
     escalatedAt: null,
     escalationOwnerTeam: null,
     remediationPlan:
@@ -363,6 +411,16 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
     deprecationWindowEndsAt: "2026-06-08T23:59:59Z",
     consumerAckStatus: "pending",
     consumerTeamsAffected: ["CRM Operations"],
+    consumerMigrationProgress: [
+      {
+        consumerTeam: "CRM Operations",
+        status: "not_started",
+        completionPercent: 0,
+        targetContractVersion: "2.1.4",
+        migrationOwner: "CRM Platform Enablement",
+        lastUpdatedAt: "2026-06-09T08:30:00Z",
+      },
+    ],
     escalatedAt: "2026-06-09T08:30:00Z",
     escalationOwnerTeam: "Data Governance Steering",
     remediationPlan:
