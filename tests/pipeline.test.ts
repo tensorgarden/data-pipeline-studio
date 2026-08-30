@@ -1318,3 +1318,49 @@ describe("demo-data: per-consumer schema migration progress", () => {
     }
   });
 });
+
+describe("demo-data: schema contract promotion gates", () => {
+  const isFullyMigrated = (event: (typeof schemaDriftEvents)[number]) =>
+    event.consumerAckStatus === "acknowledged" &&
+    event.consumerMigrationProgress.every(
+      (progress) =>
+        progress.status === "verified" && progress.completionPercent === 100
+    );
+
+  it("should carry a promotion decision and evidence for every drift event", () => {
+    const statuses = new Set(
+      schemaDriftEvents.map((event) => event.contractPromotionStatus)
+    );
+
+    expect(statuses).toEqual(
+      new Set(["blocked", "pending_review", "approved", "published"])
+    );
+
+    for (const event of schemaDriftEvents) {
+      expect(event.contractPromotionEvidence.length).toBeGreaterThan(80);
+    }
+  });
+
+  it("should block or review breaking contracts until every consumer migrates", () => {
+    for (const event of schemaDriftEvents.filter(
+      (candidate) => candidate.severity === "breaking"
+    )) {
+      if (!isFullyMigrated(event)) {
+        expect(["blocked", "pending_review"]).toContain(
+          event.contractPromotionStatus
+        );
+      }
+    }
+  });
+
+  it("should only publish a contract after acknowledged consumers verify migration", () => {
+    for (const event of schemaDriftEvents) {
+      if (event.contractPromotionStatus === "published") {
+        expect(event.status).toBe("resolved");
+        expect(isFullyMigrated(event)).toBe(true);
+      } else {
+        expect(event.contractPromotionStatus).not.toBe("published");
+      }
+    }
+  });
+});

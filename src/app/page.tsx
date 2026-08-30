@@ -42,7 +42,13 @@ function statusVariant(
     case "failed":
     case "fail":
     case "down":
+    case "blocked":
       return "danger";
+    case "pending_review":
+      return "warning";
+    case "approved":
+    case "published":
+      return "success";
     case "completed":
     case "cancelled":
       return "neutral";
@@ -355,6 +361,15 @@ function QualityDashboard({
                   Migration: {migrationVerifiedCount}/
                   {event.consumerMigrationProgress.length} consumers verified ·{" "}
                   {migrationProgressSummary}
+                </p>
+                <p className="mt-1 text-slate-500">
+                  Promotion gate:{" "}
+                  <Badge variant={statusVariant(event.contractPromotionStatus)}>
+                    {event.contractPromotionStatus.replace("_", " ")}
+                  </Badge>
+                </p>
+                <p className="mt-1 text-slate-500">
+                  {event.contractPromotionEvidence}
                 </p>
                 {event.deprecationWindowEndsAt && (
                   <p className="mt-1 text-rose-700">

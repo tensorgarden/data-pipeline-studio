@@ -297,6 +297,9 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
         lastUpdatedAt: "2026-06-09T10:20:00Z",
       },
     ],
+    contractPromotionStatus: "pending_review",
+    contractPromotionEvidence:
+      "The breaking account_tier change is held in contract review until Finance Analytics confirms the 2.3.0 migration and the source contract can pass compatibility checks without publishing an unreadable payload.",
     escalatedAt: null,
     escalationOwnerTeam: null,
     remediationPlan:
@@ -326,6 +329,9 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
         lastUpdatedAt: "2026-06-09T10:33:00Z",
       },
     ],
+    contractPromotionStatus: "approved",
+    contractPromotionEvidence:
+      "The additive nullable CRM field passed backward-compatibility review, so the 1.8.1 contract is approved for promotion while CRM Operations completes its normal consumer acknowledgement.",
     escalatedAt: null,
     escalationOwnerTeam: null,
     remediationPlan:
@@ -355,6 +361,9 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
         lastUpdatedAt: "2026-06-09T10:02:00Z",
       },
     ],
+    contractPromotionStatus: "published",
+    contractPromotionEvidence:
+      "Growth Analytics acknowledged the semantic URL change and verified its 1.4.0 consumer migration, so the compatible contract is published with no unresolved downstream dependency.",
     escalatedAt: null,
     escalationOwnerTeam: null,
     remediationPlan:
@@ -392,6 +401,9 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
         lastUpdatedAt: "2026-06-10T08:45:00Z",
       },
     ],
+    contractPromotionStatus: "blocked",
+    contractPromotionEvidence:
+      "The removed customer_lifetime_value_tier field remains blocked from promotion because Growth Data Science is only 65% migrated and the deprecation window has not cleared every affected consumer.",
     escalatedAt: null,
     escalationOwnerTeam: null,
     remediationPlan:
@@ -421,6 +433,9 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
         lastUpdatedAt: "2026-06-09T08:30:00Z",
       },
     ],
+    contractPromotionStatus: "blocked",
+    contractPromotionEvidence:
+      "Promotion is blocked after the lead_source_code removal expired unacknowledged; the governance escalation must clear CRM Operations migration evidence before MongoDB archive publishing can resume.",
     escalatedAt: "2026-06-09T08:30:00Z",
     escalationOwnerTeam: "Data Governance Steering",
     remediationPlan:

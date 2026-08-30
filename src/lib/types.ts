@@ -20,6 +20,11 @@ export type SchemaDriftConsumerAckStatus =
   | "pending"
   | "partial"
   | "acknowledged";
+export type SchemaDriftContractPromotionStatus =
+  | "blocked"
+  | "pending_review"
+  | "approved"
+  | "published";
 export type SchemaDriftMigrationStatus =
   | "not_started"
   | "in_progress"
@@ -231,6 +236,8 @@ export interface SchemaDriftEvent {
   consumerAckStatus: SchemaDriftConsumerAckStatus;
   consumerTeamsAffected: string[];
   consumerMigrationProgress: SchemaDriftConsumerProgress[];
+  contractPromotionStatus: SchemaDriftContractPromotionStatus;
+  contractPromotionEvidence: string;
   escalatedAt: string | null;
   escalationOwnerTeam: string | null;
   remediationPlan: string;
