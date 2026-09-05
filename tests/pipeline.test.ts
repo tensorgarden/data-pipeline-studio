@@ -1364,3 +1364,53 @@ describe("demo-data: schema contract promotion gates", () => {
     }
   });
 });
+
+describe("demo-data: schema drift detection latency", () => {
+  it("should record source observation and detection SLA evidence", () => {
+    const statuses = new Set(
+      schemaDriftEvents.map((event) => event.detectionSlaStatus)
+    );
+
+    expect(statuses).toEqual(new Set(["within_sla", "breached"]));
+
+    for (const event of schemaDriftEvents) {
+      const observedAt = Date.parse(event.changeObservedAt);
+      const detectedAt = Date.parse(event.detectedAt);
+
+      expect(Number.isNaN(observedAt)).toBe(false);
+      expect(Number.isNaN(detectedAt)).toBe(false);
+      expect(detectedAt).toBeGreaterThan(observedAt);
+      expect(event.detectionSlaMinutes).toBeGreaterThan(0);
+      expect(event.detectionLatencyMinutes).toBe(
+        Math.round((detectedAt - observedAt) / 60_000)
+      );
+    }
+  });
+
+  it("should classify detection latency against the declared SLA", () => {
+    for (const event of schemaDriftEvents) {
+      if (event.detectionSlaStatus === "within_sla") {
+        expect(event.detectionLatencyMinutes).toBeLessThanOrEqual(
+          event.detectionSlaMinutes
+        );
+      }
+
+      if (event.detectionSlaStatus === "breached") {
+        expect(event.detectionLatencyMinutes).toBeGreaterThan(
+          event.detectionSlaMinutes
+        );
+      }
+    }
+  });
+
+  it("should keep a breached detection visible during active remediation", () => {
+    const breachedEvents = schemaDriftEvents.filter(
+      (event) => event.detectionSlaStatus === "breached"
+    );
+
+    expect(breachedEvents.length).toBeGreaterThanOrEqual(1);
+    expect(
+      breachedEvents.some((event) => event.status === "remediating")
+    ).toBe(true);
+  });
+});

@@ -350,6 +350,20 @@ function QualityDashboard({
                 <p className="text-slate-500">
                   {event.fieldName} · {event.changeType.replace("_", " ")} · {timeAgo(event.detectedAt)}
                 </p>
+                <p className="mt-1 text-slate-500">
+                  Detection: {event.detectionLatencyMinutes}m / {event.detectionSlaMinutes}m SLA ·{" "}
+                  <Badge
+                    variant={
+                      event.detectionSlaStatus === "within_sla"
+                        ? "success"
+                        : "danger"
+                    }
+                  >
+                    {event.detectionSlaStatus === "within_sla"
+                      ? "within SLA"
+                      : "breached"}
+                  </Badge>
+                </p>
                 <p className="mt-1 text-amber-700">
                   Downstream: {downstreamNames || "none"}
                 </p>

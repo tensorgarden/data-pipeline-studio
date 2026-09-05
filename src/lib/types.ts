@@ -25,6 +25,7 @@ export type SchemaDriftContractPromotionStatus =
   | "pending_review"
   | "approved"
   | "published";
+export type SchemaDriftDetectionSlaStatus = "within_sla" | "breached";
 export type SchemaDriftMigrationStatus =
   | "not_started"
   | "in_progress"
@@ -230,6 +231,10 @@ export interface SchemaDriftEvent {
   severity: SchemaDriftSeverity;
   status: SchemaDriftStatus;
   detectedAt: string;
+  changeObservedAt: string;
+  detectionSlaMinutes: number;
+  detectionLatencyMinutes: number;
+  detectionSlaStatus: SchemaDriftDetectionSlaStatus;
   downstreamPipelineIds: string[];
   contractVersion: string;
   deprecationWindowEndsAt: string | null;
