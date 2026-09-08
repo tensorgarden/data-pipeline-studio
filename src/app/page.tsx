@@ -401,6 +401,18 @@ function QualityDashboard({
                     · owner: {event.escalationOwnerTeam ?? "unassigned"}
                   </p>
                 )}
+                <p className="mt-1 text-slate-500">
+                  Closure:{" "}
+                  {event.resolution.status === "confirmed"
+                    ? "confirmed"
+                    : "pending consumer confirmation"}
+                  {event.resolution.resolvedBy
+                    ? ` · ${event.resolution.resolvedBy}`
+                    : ""}
+                </p>
+                <p className="mt-1 text-slate-500">
+                  {event.resolution.evidence}
+                </p>
               </div>
             );
           })}

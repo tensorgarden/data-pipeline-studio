@@ -26,6 +26,14 @@ export type SchemaDriftContractPromotionStatus =
   | "approved"
   | "published";
 export type SchemaDriftDetectionSlaStatus = "within_sla" | "breached";
+export type SchemaDriftResolutionStatus = "pending" | "confirmed";
+
+export interface SchemaDriftResolutionEvidence {
+  status: SchemaDriftResolutionStatus;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+  evidence: string;
+}
 export type SchemaDriftMigrationStatus =
   | "not_started"
   | "in_progress"
@@ -245,6 +253,7 @@ export interface SchemaDriftEvent {
   contractPromotionEvidence: string;
   escalatedAt: string | null;
   escalationOwnerTeam: string | null;
+  resolution: SchemaDriftResolutionEvidence;
   remediationPlan: string;
 }
 

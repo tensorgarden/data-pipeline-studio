@@ -1414,3 +1414,51 @@ describe("demo-data: schema drift detection latency", () => {
     ).toBe(true);
   });
 });
+
+
+describe("demo-data: schema drift resolution evidence", () => {
+  it("should record a typed resolution path for every drift event", () => {
+    const statuses = new Set(
+      schemaDriftEvents.map((event) => event.resolution.status)
+    );
+
+    expect(statuses).toEqual(new Set(["pending", "confirmed"]));
+
+    for (const event of schemaDriftEvents) {
+      expect(event.resolution.evidence.length).toBeGreaterThan(80);
+
+      if (event.resolution.status === "confirmed") {
+        expect(event.status).toBe("resolved");
+        expect(event.resolution.resolvedAt).not.toBeNull();
+        expect(event.resolution.resolvedBy?.trim().length).toBeGreaterThan(6);
+        expect(Date.parse(event.resolution.resolvedAt as string)).toBeGreaterThan(
+          Date.parse(event.detectedAt)
+        );
+      }
+    }
+  });
+
+  it("should only mark resolved drift as confirmed after consumer acknowledgement", () => {
+    for (const event of schemaDriftEvents) {
+      if (event.status === "resolved") {
+        expect(event.resolution.status).toBe("confirmed");
+        expect(event.consumerAckStatus).toBe("acknowledged");
+      } else {
+        expect(event.resolution.status).toBe("pending");
+        expect(event.resolution.resolvedAt).toBeNull();
+        expect(event.resolution.resolvedBy).toBeNull();
+      }
+    }
+  });
+
+  it("should keep escalated drift visibly pending a named closure decision", () => {
+    const escalatedEvents = schemaDriftEvents.filter(
+      (event) => event.status === "escalated"
+    );
+
+    expect(escalatedEvents.length).toBeGreaterThanOrEqual(1);
+    expect(
+      escalatedEvents.every((event) => event.resolution.status === "pending")
+    ).toBe(true);
+  });
+});

@@ -306,6 +306,12 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
       "The breaking account_tier change is held in contract review until Finance Analytics confirms the 2.3.0 migration and the source contract can pass compatibility checks without publishing an unreadable payload.",
     escalatedAt: null,
     escalationOwnerTeam: null,
+    resolution: {
+      status: "pending",
+      resolvedAt: null,
+      resolvedBy: null,
+      evidence: "Consumer migration is still underway; Data Platform keeps the contract in remediation until Finance Analytics confirms 2.3.0 in production and a reviewer records closure evidence.",
+    },
     remediationPlan:
       "Hold Data Lake Aggregator publishing, update the typed revenue transform, and replay the overnight load after the PostgreSQL contract is approved.",
   },
@@ -342,6 +348,12 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
       "The additive nullable CRM field passed backward-compatibility review, so the 1.8.1 contract is approved for promotion while CRM Operations completes its normal consumer acknowledgement.",
     escalatedAt: null,
     escalationOwnerTeam: null,
+    resolution: {
+      status: "pending",
+      resolvedAt: null,
+      resolvedBy: null,
+      evidence: "The additive field is being monitored while CRM Operations acknowledges the published compatibility decision; no closure is confirmed until the consumer owner records a verified migration outcome.",
+    },
     remediationPlan:
       "Register the nullable CRM field in the MongoDB archive contract before promotion so downstream analysts see an intentional schema extension.",
   },
@@ -378,6 +390,12 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
       "Growth Analytics acknowledged the semantic URL change and verified its 1.4.0 consumer migration, so the compatible contract is published with no unresolved downstream dependency.",
     escalatedAt: null,
     escalationOwnerTeam: null,
+    resolution: {
+      status: "confirmed",
+      resolvedAt: "2026-06-09T10:02:00Z",
+      resolvedBy: "Growth Analytics Engineering",
+      evidence: "Growth Analytics verified the normalized URL semantics after the 1.4.0 migration, documented the dashboard check, and recorded consumer acknowledgement before the drift was closed.",
+    },
     remediationPlan:
       "Documented the campaign-tagging semantic shift and confirmed real-time funnel analytics dashboards already normalize the new URL format.",
   },
@@ -422,6 +440,12 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
       "The removed customer_lifetime_value_tier field remains blocked from promotion because Growth Data Science is only 65% migrated and the deprecation window has not cleared every affected consumer.",
     escalatedAt: null,
     escalationOwnerTeam: null,
+    resolution: {
+      status: "pending",
+      resolvedAt: null,
+      resolvedBy: null,
+      evidence: "Marketing Analytics is complete, but Growth Data Science remains at 65%; the source owner must retain remediation until the remaining consumer confirms the restored field and records closure evidence.",
+    },
     remediationPlan:
       "Restore the deprecated tier column in the PostgreSQL publishing view while Marketing Analytics and Growth Data Science finish their migrations, then retire the field only after the deprecation window closes.",
   },
@@ -458,6 +482,12 @@ export const schemaDriftEvents: SchemaDriftEvent[] = [
       "Promotion is blocked after the lead_source_code removal expired unacknowledged; the governance escalation must clear CRM Operations migration evidence before MongoDB archive publishing can resume.",
     escalatedAt: "2026-06-09T08:30:00Z",
     escalationOwnerTeam: "Data Governance Steering",
+    resolution: {
+      status: "pending",
+      resolvedAt: null,
+      resolvedBy: null,
+      evidence: "The governance steering group has accepted the escalation, but CRM Operations has not confirmed migration completion; publication stays frozen until a named consumer owner records the final closure decision.",
+    },
     remediationPlan:
       "The deprecation window closed before CRM Operations acknowledged the removed lead source column. The contract owner escalated enforcement to the data governance steering group and MongoDB archive publishing stays frozen until consumers confirm the field is no longer referenced.",
   },
