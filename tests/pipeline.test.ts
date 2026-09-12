@@ -6,6 +6,7 @@ import {
   dataFreshnessRecords,
   runErrorBreakdowns,
   schemaDriftEvents,
+  canPublishSchemaContract,
   observabilityAlerts,
   pipelineCostSignals,
   pipelineRecoveryValidations,
@@ -1460,5 +1461,54 @@ describe("demo-data: schema drift resolution evidence", () => {
     expect(
       escalatedEvents.every((event) => event.resolution.status === "pending")
     ).toBe(true);
+  });
+});
+
+describe("demo-data: executable schema contract release gate", () => {
+  it("should allow only the fully evidenced published contract", () => {
+    const publishedEvents = schemaDriftEvents.filter(
+      (event) => event.contractPromotionStatus === "published"
+    );
+    const heldEvents = schemaDriftEvents.filter(
+      (event) => event.contractPromotionStatus !== "published"
+    );
+
+    expect(publishedEvents).toHaveLength(1);
+    expect(publishedEvents.every(canPublishSchemaContract)).toBe(true);
+    expect(heldEvents.every((event) => !canPublishSchemaContract(event))).toBe(true);
+  });
+
+  it("should hold an otherwise-ready contract when promotion is not published", () => {
+    const publishedEvent = schemaDriftEvents.find(
+      (event) => event.contractPromotionStatus === "published"
+    );
+    expect(publishedEvent).toBeDefined();
+
+    const heldEvent = {
+      ...publishedEvent!,
+      contractPromotionStatus: "pending_review" as const,
+    };
+
+    expect(canPublishSchemaContract(publishedEvent!)).toBe(true);
+    expect(canPublishSchemaContract(heldEvent)).toBe(false);
+  });
+
+  it("should hold a published contract if closure evidence is withdrawn", () => {
+    const publishedEvent = schemaDriftEvents.find(
+      (event) => event.contractPromotionStatus === "published"
+    );
+    expect(publishedEvent).toBeDefined();
+
+    const incompleteEvent = {
+      ...publishedEvent!,
+      resolution: {
+        ...publishedEvent!.resolution,
+        status: "pending" as const,
+        resolvedAt: null,
+        resolvedBy: null,
+      },
+    };
+
+    expect(canPublishSchemaContract(incompleteEvent)).toBe(false);
   });
 });

@@ -8,6 +8,7 @@ import {
   sourceConnectors,
   etlJobs,
   schemaDriftEvents,
+  canPublishSchemaContract,
   observabilityAlerts,
   pipelineCostSignals,
   pipelineRecoveryValidations,
@@ -320,6 +321,7 @@ function QualityDashboard({
                   `${progress.consumerTeam}: ${progress.completionPercent}%`
               )
               .join(" · ");
+            const contractPublishable = canPublishSchemaContract(event);
 
             return (
               <div
@@ -381,6 +383,14 @@ function QualityDashboard({
                   <Badge variant={statusVariant(event.contractPromotionStatus)}>
                     {event.contractPromotionStatus.replace("_", " ")}
                   </Badge>
+                </p>
+                <p className="mt-1 text-slate-500">
+                  Release gate:{" "}
+                  <Badge variant={contractPublishable ? "success" : "danger"}>
+                    {contractPublishable ? "allowed" : "held"}
+                  </Badge>
+                  {!contractPublishable &&
+                    " until contract and consumer evidence are complete"}
                 </p>
                 <p className="mt-1 text-slate-500">
                   {event.contractPromotionEvidence}

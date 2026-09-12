@@ -272,6 +272,22 @@ export const partitionFreshnessRecords: PartitionFreshnessEvidence[] = [
   },
 ];
 
+export function canPublishSchemaContract(event: SchemaDriftEvent): boolean {
+  return (
+    event.contractPromotionStatus === "published" &&
+    event.status === "resolved" &&
+    event.consumerAckStatus === "acknowledged" &&
+    event.consumerMigrationProgress.length > 0 &&
+    event.consumerMigrationProgress.every(
+      (progress) =>
+        progress.status === "verified" && progress.completionPercent === 100
+    ) &&
+    event.resolution.status === "confirmed" &&
+    event.resolution.resolvedAt !== null &&
+    event.resolution.resolvedBy !== null
+  );
+}
+
 export const schemaDriftEvents: SchemaDriftEvent[] = [
   {
     id: "drift-1",
