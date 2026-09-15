@@ -12,6 +12,7 @@ import {
   observabilityAlerts,
   pipelineCostSignals,
   pipelineRecoveryValidations,
+  canPublishRecoveryValidation,
   partitionFreshnessRecords,
   computeMetrics,
 } from "@/lib/demo-data";
@@ -580,7 +581,7 @@ function AlertPanel() {
     .filter((signal) => signal.status !== "within_budget")
     .sort((a, b) => b.variancePercent - a.variancePercent);
   const recoveryGates = pipelineRecoveryValidations.filter(
-    (validation) => validation.status !== "ready_to_publish"
+    (validation) => !canPublishRecoveryValidation(validation)
   );
   const partitionFreshnessRisks = partitionFreshnessRecords.filter(
     (record) => record.status !== "fresh"

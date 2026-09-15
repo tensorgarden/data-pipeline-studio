@@ -797,6 +797,39 @@ export const pipelineRecoveryValidations: PipelineRecoveryValidation[] = [
   },
 ];
 
+export function canPublishRecoveryValidation(
+  validation: PipelineRecoveryValidation
+): boolean {
+  const replayRun = validation.replayRunId
+    ? pipelineRuns.find((run) => run.id === validation.replayRunId)
+    : undefined;
+
+  return (
+    validation.status === "ready_to_publish" &&
+    replayRun?.status === "success" &&
+    validation.recordsCompared === validation.recordsExpected &&
+    validation.validationFailedRecords === 0 &&
+    validation.validationPendingRecords === 0 &&
+    validation.validationSuspendedRecords === 0 &&
+    validation.validationExceptionStatus === "cleared" &&
+    validation.qualityChecksPassed === validation.qualityChecksRequired &&
+    validation.downstreamWatermarkVerified &&
+    validation.rowCountVariancePercent !== null &&
+    validation.contentReconciliationStatus === "matched" &&
+    validation.sourceChecksum !== null &&
+    validation.sourceChecksum === validation.targetChecksum &&
+    validation.idempotencyVerified &&
+    validation.deduplicationKey !== null &&
+    validation.duplicateRowsDetected === 0 &&
+    validation.eventTimeWatermarkVerified &&
+    validation.lateRecordsDetected === 0 &&
+    validation.estimatedReplayCostUsd !== null &&
+    (validation.replayCostApprovalStatus === "approved" ||
+      validation.replayCostApprovalStatus === "within_threshold") &&
+    validation.blockingReason === null
+  );
+}
+
 export const pipelineCostSignals: PipelineCostSignal[] = [
   {
     id: "cost-1",

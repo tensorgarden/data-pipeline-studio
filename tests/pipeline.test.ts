@@ -10,6 +10,7 @@ import {
   observabilityAlerts,
   pipelineCostSignals,
   pipelineRecoveryValidations,
+  canPublishRecoveryValidation,
   partitionFreshnessRecords,
   computeMetrics,
 } from "@/lib/demo-data";
@@ -650,6 +651,20 @@ describe("demo-data: incident recovery validation", () => {
     for (const validation of unsafeReplays) {
       expect(validation.status).not.toBe("ready_to_publish");
     }
+  });
+
+  it("should require the executable recovery gate before publishing", () => {
+    const ready = pipelineRecoveryValidations.find(
+      (validation) => validation.status === "ready_to_publish"
+    );
+    expect(ready).toBeDefined();
+    expect(canPublishRecoveryValidation(ready!)).toBe(true);
+
+    const checksumMismatch = {
+      ...ready!,
+      targetChecksum: "crc32:changed",
+    };
+    expect(canPublishRecoveryValidation(checksumMismatch)).toBe(false);
   });
 
   it("should keep publication blocked until replay evidence is complete", () => {
